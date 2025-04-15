@@ -1,0 +1,15 @@
+cmake_minimum_required(VERSION 3.5)
+project(CVDev LANGUAGES CXX)
+
+set (CMAKE_CXX_STANDARD_REQUIRED 20)
+set (CMAKE_CXX_STANDARD 20)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "")
+
+add_subdirectory(submodules)
+
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/modules/" ${CMAKE_MODULE_PATH})
+
+add_subdirectory(src)
