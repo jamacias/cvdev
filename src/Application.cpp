@@ -27,8 +27,8 @@ CVDev::CVDev(const Arguments &arguments) : Platform::Application{arguments, NoCr
     }
 
     using namespace Math::Literals;
-    // imgui_ = ImGuiIntegration::Context(Vector2{windowSize()} / dpiScaling(),
-    //                                    windowSize(), framebufferSize());
+    imgui_ = ImGuiIntegration::Context(Vector2{windowSize()} / dpiScaling(),
+                                       windowSize(), framebufferSize());
 
     GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
     GL::Renderer::enable(GL::Renderer::Feature::FaceCulling);
@@ -45,23 +45,23 @@ CVDev::CVDev(const Arguments &arguments) : Platform::Application{arguments, NoCr
     threeDView1_ = std::make_unique<ThreeDView>(*this, scene_);
     grid_ = std::make_unique<Grid>(*scene_, drawables_);
 
-    // imagePreview_ = std::make_unique<ImagePreview>();
+    imagePreview_ = std::make_unique<ImagePreview>();
 }
 
 void CVDev::drawEvent()
 {
     GL::defaultFramebuffer.clear(GL::FramebufferClear::Color | GL::FramebufferClear::Depth);
 
-    // imgui_.newFrame();
+    imgui_.newFrame();
 
-    // if(ImGui::GetIO().WantTextInput && !isTextInputActive())
-    //     startTextInput();
-    // else if(!ImGui::GetIO().WantTextInput && isTextInputActive())
-    //     stopTextInput();
+    if(ImGui::GetIO().WantTextInput && !isTextInputActive())
+        startTextInput();
+    else if(!ImGui::GetIO().WantTextInput && isTextInputActive())
+        stopTextInput();
 
-    // ImGui::Begin("Test");
-    // ImGui::Text("Hello, world!");
-    // ImGui::End();
+    ImGui::Begin("Test");
+    ImGui::Text("Hello, world!");
+    ImGui::End();
 
     threeDView1_->setViewport(Range2Di({0, 0}, {windowSize().x()/2, windowSize().y()}));
     threeDView1_->draw(drawables_);
@@ -71,14 +71,14 @@ void CVDev::drawEvent()
 
     // imagePreview_->draw();
 
-    // imgui_.updateApplicationCursor(*this);
+    imgui_.updateApplicationCursor(*this);
 
     GL::Renderer::enable(GL::Renderer::Feature::Blending);
     GL::Renderer::enable(GL::Renderer::Feature::ScissorTest);
     GL::Renderer::disable(GL::Renderer::Feature::FaceCulling);
     GL::Renderer::disable(GL::Renderer::Feature::DepthTest);
 
-    // imgui_.drawFrame();
+    imgui_.drawFrame();
 
     GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
     GL::Renderer::enable(GL::Renderer::Feature::FaceCulling);
@@ -93,26 +93,26 @@ void CVDev::viewportEvent(ViewportEvent &event)
 {
     GL::defaultFramebuffer.setViewport({{}, event.framebufferSize()});
 
-    // imgui_.relayout(Vector2{event.windowSize()} / event.dpiScaling(),
-    //                 event.windowSize(), event.framebufferSize());
+    imgui_.relayout(Vector2{event.windowSize()} / event.dpiScaling(),
+                    event.windowSize(), event.framebufferSize());
 }
 
 void CVDev::keyPressEvent(KeyEvent &event)
 {
-    // if (imgui_.handleKeyPressEvent(event))
-    //     return;
+    if (imgui_.handleKeyPressEvent(event))
+        return;
 }
 
 void CVDev::keyReleaseEvent(KeyEvent &event)
 {
-    // if (imgui_.handleKeyReleaseEvent(event))
-    //     return;
+    if (imgui_.handleKeyReleaseEvent(event))
+        return;
 }
 
 void CVDev::pointerPressEvent(PointerEvent &event)
 {
-    // if (imgui_.handlePointerPressEvent(event))
-    //     return;
+    if (imgui_.handlePointerPressEvent(event))
+        return;
 
     threeDView1_->pointerPressEvent(event);
     threeDView_->pointerPressEvent(event);
@@ -120,17 +120,17 @@ void CVDev::pointerPressEvent(PointerEvent &event)
 
 void CVDev::pointerReleaseEvent(PointerEvent &event)
 {
+    if (imgui_.handlePointerReleaseEvent(event))
+        return;
+
     threeDView_->pointerReleaseEvent(event);
     threeDView1_->pointerReleaseEvent(event);
-    // if (imgui_.handlePointerReleaseEvent(event))
-    //     return;
 }
 
 void CVDev::pointerMoveEvent(PointerMoveEvent &event)
 {
-    using namespace Math::Literals;
-    // if (imgui_.handlePointerMoveEvent(event))
-    //     return;
+    if (imgui_.handlePointerMoveEvent(event))
+        return;
 
     threeDView1_->pointerMoveEvent(event);
     threeDView_->pointerMoveEvent(event);
@@ -138,12 +138,12 @@ void CVDev::pointerMoveEvent(PointerMoveEvent &event)
 
 void CVDev::scrollEvent(ScrollEvent &event)
 {
-    // if (imgui_.handleScrollEvent(event))
-    // {
-    //     /* Prevent scrolling the page */
-    //     event.setAccepted();
-    //     return;
-    // }
+    if (imgui_.handleScrollEvent(event))
+    {
+        /* Prevent scrolling the page */
+        event.setAccepted();
+        return;
+    }
 
     threeDView1_->scrollEvent(event);
     threeDView_->scrollEvent(event);
@@ -151,8 +151,8 @@ void CVDev::scrollEvent(ScrollEvent &event)
 
 void CVDev::textInputEvent(TextInputEvent &event)
 {
-    // if (imgui_.handleTextInputEvent(event))
-    //     return;
+    if (imgui_.handleTextInputEvent(event))
+        return;
 }
 
 MAGNUM_APPLICATION_MAIN(CVDev)
