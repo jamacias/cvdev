@@ -15,10 +15,10 @@ class ThreeDView
 public:
     explicit ThreeDView(const Platform::Application &applicationContext, const std::shared_ptr<Scene3D> scene = std::make_shared<Scene3D>());
 
-    void pointerPressEvent(Platform::Application::PointerEvent &event);
-    void pointerReleaseEvent(Platform::Application::PointerEvent &event);
-    void pointerMoveEvent(Platform::Application::PointerMoveEvent &event);
-    void scrollEvent(Platform::Application::ScrollEvent &event);
+    void handlePointerPressEvent(Platform::Application::PointerEvent &event);
+    void handlePointerReleaseEvent(Platform::Application::PointerEvent &event);
+    void handlePointerMoveEvent(Platform::Application::PointerMoveEvent &event);
+    void handleScrollEvent(Platform::Application::ScrollEvent &event);
 
     void setViewport(const Range2Di &viewport);
 

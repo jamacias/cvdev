@@ -57,7 +57,7 @@ Vector3 ThreeDView::unproject(const Vector2 &windowPosition, Float depth) const
     return camera_->projectionMatrix().inverted().transformPoint(in);
 }
 
-void ThreeDView::pointerPressEvent(Platform::Application::PointerEvent &event)
+void ThreeDView::handlePointerPressEvent(Platform::Application::PointerEvent &event)
 {
     using Pointer = Platform::Application::Pointer;
 
@@ -86,12 +86,12 @@ void ThreeDView::pointerPressEvent(Platform::Application::PointerEvent &event)
     }
 }
 
-void ThreeDView::pointerReleaseEvent([[maybe_unused]] Platform::Application::PointerEvent &event)
+void ThreeDView::handlePointerReleaseEvent([[maybe_unused]] Platform::Application::PointerEvent &event)
 {
     viewportActive_ = false;
 }
 
-void ThreeDView::pointerMoveEvent(Platform::Application::PointerMoveEvent &event)
+void ThreeDView::handlePointerMoveEvent(Platform::Application::PointerMoveEvent &event)
 {
     using Pointer = Platform::Application::Pointer;
     using Modifier = Platform::Application::Modifier;
@@ -129,7 +129,7 @@ void ThreeDView::pointerMoveEvent(Platform::Application::PointerMoveEvent &event
             Matrix4::translation(-rotationPoint_));
 }
 
-void ThreeDView::scrollEvent(Platform::Application::ScrollEvent &event)
+void ThreeDView::handleScrollEvent(Platform::Application::ScrollEvent &event)
 {
     if (!viewport_.contains(Vector2i{event.position()}))
         return;

@@ -114,8 +114,8 @@ void CVDev::pointerPressEvent(PointerEvent &event)
     if (imgui_.handlePointerPressEvent(event))
         return;
 
-    threeDView1_->pointerPressEvent(event);
-    threeDView_->pointerPressEvent(event);
+    threeDView1_->handlePointerPressEvent(event);
+    threeDView_->handlePointerPressEvent(event);
 }
 
 void CVDev::pointerReleaseEvent(PointerEvent &event)
@@ -123,8 +123,8 @@ void CVDev::pointerReleaseEvent(PointerEvent &event)
     if (imgui_.handlePointerReleaseEvent(event))
         return;
 
-    threeDView_->pointerReleaseEvent(event);
-    threeDView1_->pointerReleaseEvent(event);
+    threeDView_->handlePointerReleaseEvent(event);
+    threeDView1_->handlePointerReleaseEvent(event);
 }
 
 void CVDev::pointerMoveEvent(PointerMoveEvent &event)
@@ -132,8 +132,8 @@ void CVDev::pointerMoveEvent(PointerMoveEvent &event)
     if (imgui_.handlePointerMoveEvent(event))
         return;
 
-    threeDView1_->pointerMoveEvent(event);
-    threeDView_->pointerMoveEvent(event);
+    threeDView1_->handlePointerMoveEvent(event);
+    threeDView_->handlePointerMoveEvent(event);
 }
 
 void CVDev::scrollEvent(ScrollEvent &event)
@@ -145,8 +145,8 @@ void CVDev::scrollEvent(ScrollEvent &event)
         return;
     }
 
-    threeDView1_->scrollEvent(event);
-    threeDView_->scrollEvent(event);
+    threeDView1_->handleScrollEvent(event);
+    threeDView_->handleScrollEvent(event);
 }
 
 void CVDev::textInputEvent(TextInputEvent &event)
