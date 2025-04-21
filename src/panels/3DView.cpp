@@ -158,6 +158,11 @@ void ThreeDView::setViewport(const Range2Di &viewport)
     viewport_ = viewport;
 }
 
+Range2Di ThreeDView::getViewport() const
+{
+    return viewport_;
+}
+
 void ThreeDView::draw(SceneGraph::DrawableGroup3D &drawables)
 {
     using namespace Math::Literals;

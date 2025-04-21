@@ -14,6 +14,11 @@ class ThreeDView
 {
 public:
     explicit ThreeDView(const Platform::Application &applicationContext, const std::shared_ptr<Scene3D> scene = std::make_shared<Scene3D>());
+    // ~ThreeDView() = default;
+    // ThreeDView(const ThreeDView&) = delete;
+    // ThreeDView(ThreeDView&&) = delete;
+    // ThreeDView& operator=(const ThreeDView&) = delete;
+    // ThreeDView& operator=(ThreeDView&&) = delete;
 
     void handlePointerPressEvent(Platform::Application::PointerEvent &event);
     void handlePointerReleaseEvent(Platform::Application::PointerEvent &event);
@@ -21,6 +26,7 @@ public:
     void handleScrollEvent(Platform::Application::ScrollEvent &event);
 
     void setViewport(const Range2Di &viewport);
+    Range2Di getViewport() const;
 
     void draw(SceneGraph::DrawableGroup3D &drawables);
 

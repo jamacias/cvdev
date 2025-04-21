@@ -11,6 +11,7 @@
 #include "objects/Grid.h"
 #include "panels/ImagePreview.h"
 #include "panels/3DView.h"
+#include "viewports/ViewportManager.h"
 
 
 using namespace Magnum;
@@ -43,4 +44,5 @@ private:
     std::unique_ptr<Grid> grid_;
     std::unique_ptr<ThreeDView> threeDView_;
     std::unique_ptr<ThreeDView> threeDView1_;
+    std::unique_ptr<ViewportManager> viewportManager_;
 };

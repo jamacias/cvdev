@@ -15,9 +15,13 @@ set(PANELS_LIST
     panels/3DView.cpp
     panels/ImagePreview.cpp)
 
+set(VIEWPORTS_LIST
+    viewports/ViewportManager.cpp)
+
 add_executable(Application Application.cpp
                            ${OBJECTS_LIST}
-                           ${PANELS_LIST})
+                           ${PANELS_LIST}
+                           ${VIEWPORTS_LIST})
 target_link_libraries(Application PRIVATE
     Magnum::Application
     Magnum::GL
