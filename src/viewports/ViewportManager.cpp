@@ -14,7 +14,6 @@ ViewportManager::ViewportManager(const Platform::Application &applicationContext
 
 void ViewportManager::handlePointerPressEvent(Platform::Application::PointerEvent &event)
 {
-    // getActiveViewport(event.position()).handlePointerPressEvent(event);
     for (auto &viewport : viewports_)
     {
         viewport.handlePointerPressEvent(event);
@@ -23,7 +22,6 @@ void ViewportManager::handlePointerPressEvent(Platform::Application::PointerEven
 
 void ViewportManager::handlePointerReleaseEvent(Platform::Application::PointerEvent &event)
 {
-    // getActiveViewport(event.position()).handlePointerReleaseEvent(event);
     for (auto &viewport : viewports_)
     {
         viewport.handlePointerReleaseEvent(event);
@@ -32,7 +30,6 @@ void ViewportManager::handlePointerReleaseEvent(Platform::Application::PointerEv
 
 void ViewportManager::handlePointerMoveEvent(Platform::Application::PointerMoveEvent &event)
 {
-    // getActiveViewport(event.position()).handlePointerMoveEvent(event);
     for (auto &viewport : viewports_)
     {
         viewport.handlePointerMoveEvent(event);
@@ -41,7 +38,6 @@ void ViewportManager::handlePointerMoveEvent(Platform::Application::PointerMoveE
 
 void ViewportManager::handleScrollEvent(Platform::Application::ScrollEvent &event)
 {
-    // getActiveViewport(event.position()).handleScrollEvent(event);
     for (auto &viewport : viewports_)
     {
         viewport.handleScrollEvent(event);

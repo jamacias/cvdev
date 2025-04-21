@@ -22,7 +22,7 @@ ThreeDView::ThreeDView(const Platform::Application &applicationContext, const st
         45.0_degf, Vector2{applicationContext_.windowSize()}.aspectRatio(), 0.01f, 100.0f));
 
     lastDepth_ = ((camera_->projectionMatrix() * camera_->cameraMatrix()).transformPoint({}).z() + 1.0f) * 0.5f;
-    viewport_ = {Vector2i{0, 0}, applicationContext_.windowSize()};
+    setRelativeViewport({Vector2{0.0f, 0.0f}, Vector2{1.0f, 1.0f}});
 
     // Setup the borders of the viewport
     mesh_ = MeshTools::compile(Primitives::squareWireframe());
@@ -65,7 +65,8 @@ void ThreeDView::handlePointerPressEvent(Platform::Application::PointerEvent &ev
         !(event.pointer() & (Pointer::MouseLeft)))
         return;
 
-    if (!viewport_.contains(Vector2i{event.position()}))
+    const auto viewport = calculateViewport(relativeViewport_, applicationContext_.windowSize());
+    if (!viewport.contains(Vector2i{event.position()}))
         return;
 
     viewportActive_ = true;
@@ -104,7 +105,8 @@ void ThreeDView::handlePointerMoveEvent(Platform::Application::PointerMoveEvent 
     if (!viewportActive_)
         return;
 
-    if (!viewportActive_ && !viewport_.contains(Vector2i{event.position()}))
+    const auto viewport = calculateViewport(relativeViewport_, applicationContext_.windowSize());
+    if (!viewportActive_ && !viewport.contains(Vector2i{event.position()}))
         return;
 
     if (Math::isNan(lastPosition_).all())
@@ -131,7 +133,8 @@ void ThreeDView::handlePointerMoveEvent(Platform::Application::PointerMoveEvent 
 
 void ThreeDView::handleScrollEvent(Platform::Application::ScrollEvent &event)
 {
-    if (!viewport_.contains(Vector2i{event.position()}))
+    const auto viewport = calculateViewport(relativeViewport_, applicationContext_.windowSize());
+    if (!viewport.contains(Vector2i{event.position()}))
         return;
 
     const Float currentDepth = depthAt(event.position());
@@ -153,9 +156,22 @@ void ThreeDView::handleScrollEvent(Platform::Application::ScrollEvent &event)
     event.setAccepted();
 }
 
+void ThreeDView::setRelativeViewport(const Range2D &relativeViewport)
+{
+    CORRADE_INTERNAL_ASSERT(relativeViewport.min() >= Vector2{0.0f});
+    CORRADE_INTERNAL_ASSERT(relativeViewport.max() <= Vector2{1.0f});
+
+    relativeViewport_ = relativeViewport;
+    viewport_ = calculateViewport(relativeViewport, applicationContext_.windowSize());
+}
+
 void ThreeDView::setViewport(const Range2Di &viewport)
 {
+    CORRADE_INTERNAL_ASSERT(viewport.min() >= Vector2i{0});
+    CORRADE_INTERNAL_ASSERT(viewport.max() <= applicationContext_.windowSize());
+    
     viewport_ = viewport;
+    relativeViewport_ = calculateRelativeViewport(viewport, applicationContext_.windowSize());
 }
 
 Range2Di ThreeDView::getViewport() const
@@ -163,12 +179,23 @@ Range2Di ThreeDView::getViewport() const
     return viewport_;
 }
 
+Range2D ThreeDView::calculateRelativeViewport(const Range2Di &absoluteViewport, const Vector2i &windowSize)
+{
+    return Range2D{Vector2{absoluteViewport.min()} / Vector2{windowSize}, Vector2{absoluteViewport.max()} / Vector2{windowSize}};
+}
+
+Range2Di ThreeDView::calculateViewport(const Range2D &relativeViewport, const Vector2i &windowSize)
+{
+    return Range2Di{relativeViewport.min() * windowSize, relativeViewport.max() * windowSize};
+}
+
 void ThreeDView::draw(SceneGraph::DrawableGroup3D &drawables)
 {
     using namespace Math::Literals;
 
     const auto originalViewport = GL::defaultFramebuffer.viewport();
-    GL::defaultFramebuffer.setViewport(viewport_);
+    const auto viewport = calculateViewport(relativeViewport_, applicationContext_.windowSize());
+    GL::defaultFramebuffer.setViewport(viewport);
     
     camera_->draw(drawables);
 
