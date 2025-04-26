@@ -14,6 +14,28 @@ ViewportManager::ViewportManager(const Platform::Application &applicationContext
 
 void ViewportManager::handlePointerPressEvent(Platform::Application::PointerEvent &event)
 {
+    // Check if you are close to the borders, if so, we want to move the edge of the viewport
+    const auto activeViewport = std::find_if(viewports_.begin(), viewports_.end(), [&](const auto &v)
+                                             { return Range2D(v.getViewport()).contains(event.position()); });
+
+    if (activeViewport == viewports_.end())
+        return;
+
+    const auto viewport = activeViewport->getViewport();
+    const Int borderActivationThreshold = 5; // px
+    if (Math::abs(event.position().x() - viewport.left())   < borderActivationThreshold ||
+        Math::abs(event.position().x() - viewport.right())  < borderActivationThreshold ||
+        Math::abs(event.position().y() - viewport.top())    < borderActivationThreshold ||
+        Math::abs(event.position().y() - viewport.bottom()) < borderActivationThreshold)
+    {
+        // We are interacting with the border
+        borderInteractionActive_ = true;
+
+        borderInteractionViewport_ = &*activeViewport;
+
+        return;
+    }
+
     for (auto &viewport : viewports_)
     {
         viewport.handlePointerPressEvent(event);
@@ -22,6 +44,13 @@ void ViewportManager::handlePointerPressEvent(Platform::Application::PointerEven
 
 void ViewportManager::handlePointerReleaseEvent(Platform::Application::PointerEvent &event)
 {
+    if (borderInteractionActive_)
+    {
+        borderInteractionActive_ = false;
+        borderInteractionViewport_ = nullptr;
+        return;
+    }
+
     for (auto &viewport : viewports_)
     {
         viewport.handlePointerReleaseEvent(event);
@@ -30,6 +59,24 @@ void ViewportManager::handlePointerReleaseEvent(Platform::Application::PointerEv
 
 void ViewportManager::handlePointerMoveEvent(Platform::Application::PointerMoveEvent &event)
 {
+    if (borderInteractionActive_)
+    {
+        CORRADE_INTERNAL_ASSERT(borderInteractionViewport_ != nullptr);
+        // Resize the viewport accordingly
+        // TODO: what would happen if we go over to another viewport?
+        const auto originalViewport = borderInteractionViewport_->getViewport();
+        // Move the the edge e.g., by selecting the min
+        // const auto newRange = originalViewport.translated(Vector2i(event.relativePosition().x(), 0));
+        auto newRange = originalViewport;
+        // TODO: remember which edge is selected and drag that one
+        newRange.left() = event.position().x();
+        // const auto viewport = Range2Di::fromSize();
+        Debug {} << newRange;
+        borderInteractionViewport_->setViewport(newRange);
+
+        return;
+    }
+
     for (auto &viewport : viewports_)
     {
         viewport.handlePointerMoveEvent(event);
