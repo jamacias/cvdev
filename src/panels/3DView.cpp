@@ -34,14 +34,10 @@ ThreeDView::ThreeDView(const Platform::Application &applicationContext, const st
     // Setup the borders of the viewport
     mesh_ = MeshTools::compile(Primitives::squareWireframe());
 
-    // ImGui::GetCurrentContext();
-
     texture_.setWrapping(GL::SamplerWrapping::ClampToEdge)
         .setMagnificationFilter(GL::SamplerFilter::Linear)
         .setMinificationFilter(GL::SamplerFilter::Linear)
         .setStorage(1, GL::TextureFormat::RGBA8, applicationContext_.windowSize());
-
-    // GL::Renderer::setClearColor({ 255, 255, 255, 255 });
 }
 
 Float ThreeDView::depthAt(const Vector2 &windowPosition)
@@ -218,8 +214,6 @@ void ThreeDView::draw(SceneGraph::DrawableGroup3D &drawables)
         .attachTexture(GL::Framebuffer::ColorAttachment{0}, texture_, 0)
         .mapForDraw({{0, {GL::Framebuffer::ColorAttachment{0}}}})
         .bind();
-
-    const auto originalViewport = GL::defaultFramebuffer.viewport();
     
     camera_->draw(drawables);
 
@@ -228,10 +222,9 @@ void ThreeDView::draw(SceneGraph::DrawableGroup3D &drawables)
     
     ImGui::Begin("3D Viewport", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
     
-    ImTextureID textureID = texture_.id();
-    ImGui::Image(textureID, ImVec2{static_cast<float>(originalViewport.size().x()), 
-                                   static_cast<float>(originalViewport.size().y())},
-                            ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+    const ImTextureID textureID = texture_.id();
+    ImGui::Image(textureID, ImGui::GetWindowSize(),
+                            ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f)); // flip y axis (Magnum origin is top-left; ImGui uses bottom-left).
 
     ImGui::End();
 
