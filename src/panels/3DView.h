@@ -4,10 +4,13 @@
 #include <memory>
 #include <Magnum/Math/Range.h>
 #include <Magnum/Platform/GlfwApplication.h>
+#include <Magnum/GL/Framebuffer.h>
 #include <Magnum/GL/Mesh.h>
+#include <Magnum/GL/Texture.h>
 #include <Magnum/Shaders/FlatGL.h>
 #include <Magnum/SceneGraph/Drawable.h>
 #include "../objects/Camera.h"
+#include <imgui.h>
 
 using namespace Magnum;
 class ThreeDView
@@ -33,6 +36,7 @@ public:
     void draw(SceneGraph::DrawableGroup3D &drawables);
 
 private:
+    GL::Texture2D texture_;
     Float lastDepth_;
     Vector2 lastPosition_{Constants::nan()};
     Vector3 rotationPoint_, translationPoint_;
@@ -47,6 +51,8 @@ private:
     // TODO: convert this into its own FlatShader class?
     GL::Mesh mesh_;
     Shaders::FlatGL2D shader_;
+
+    GL::Framebuffer framebuffer_ { NoCreate };
 
     [[nodiscard]] Float depthAt(const Vector2 &windowPosition);
     [[nodiscard]] Vector3 unproject(const Vector2 &windowPosition, Float depth) const;

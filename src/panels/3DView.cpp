@@ -8,10 +8,17 @@
 #include <Magnum/MeshTools/Compile.h>
 #include <Magnum/Primitives/Square.h>
 #include <Magnum/Trade/MeshData.h>
+#include <Magnum/PixelFormat.h>
+#include <Magnum/ImageView.h>
+#include <Magnum/GL/TextureFormat.h>
+#include <Magnum/GL/Renderbuffer.h>
+#include <Magnum/GL/RenderbufferFormat.h>
+#include <Magnum/GL/Renderer.h>
 
 ThreeDView::ThreeDView(const Platform::Application &applicationContext, const std::shared_ptr<Scene3D> scene)
 : applicationContext_(applicationContext)
 , scene_(scene)
+, framebuffer_(GL::defaultFramebuffer.viewport())
 {
     using namespace Math::Literals;
     camera_ = std::make_unique<Camera>(*scene_);
@@ -26,6 +33,15 @@ ThreeDView::ThreeDView(const Platform::Application &applicationContext, const st
 
     // Setup the borders of the viewport
     mesh_ = MeshTools::compile(Primitives::squareWireframe());
+
+    // ImGui::GetCurrentContext();
+
+    texture_.setWrapping(GL::SamplerWrapping::ClampToEdge)
+        .setMagnificationFilter(GL::SamplerFilter::Linear)
+        .setMinificationFilter(GL::SamplerFilter::Linear)
+        .setStorage(1, GL::TextureFormat::RGBA8, applicationContext_.windowSize());
+
+    // GL::Renderer::setClearColor({ 255, 255, 255, 255 });
 }
 
 Float ThreeDView::depthAt(const Vector2 &windowPosition)
@@ -193,14 +209,31 @@ void ThreeDView::draw(SceneGraph::DrawableGroup3D &drawables)
 {
     using namespace Math::Literals;
 
-    const auto originalViewport = GL::defaultFramebuffer.viewport();
+    GL::Framebuffer framebuffer{ GL::defaultFramebuffer.viewport() };
+
+    framebuffer_.clear(GL::FramebufferClear::Color);
+
     const auto viewport = calculateViewport(relativeViewport_, applicationContext_.windowSize());
-    GL::defaultFramebuffer.setViewport(viewport);
+    framebuffer_.setViewport(viewport)
+        .attachTexture(GL::Framebuffer::ColorAttachment{0}, texture_, 0)
+        .mapForDraw({{0, {GL::Framebuffer::ColorAttachment{0}}}})
+        .bind();
+
+    const auto originalViewport = GL::defaultFramebuffer.viewport();
     
     camera_->draw(drawables);
 
     shader_.setColor(Color3::fromHsv({35.0_degf, 1.0f, 1.0f}))
            .draw(mesh_);
     
-    GL::defaultFramebuffer.setViewport(originalViewport);
+    ImGui::Begin("3D Viewport", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+    
+    ImTextureID textureID = texture_.id();
+    ImGui::Image(textureID, ImVec2{static_cast<float>(originalViewport.size().x()), 
+                                   static_cast<float>(originalViewport.size().y())},
+                            ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+
+    ImGui::End();
+
+    GL::defaultFramebuffer.bind();
 }

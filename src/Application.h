@@ -1,4 +1,5 @@
 #include <Magnum/GL/DefaultFramebuffer.h>
+#include <Magnum/GL/Texture.h>
 #include <Magnum/Platform/GlfwApplication.h>
 #include <Magnum/ImGuiIntegration/Context.hpp>
 #include <Magnum/SceneGraph/Camera.h>
@@ -12,6 +13,7 @@
 #include "panels/ImagePreview.h"
 #include "panels/3DView.h"
 #include "viewports/ViewportManager.h"
+
 
 
 using namespace Magnum;
