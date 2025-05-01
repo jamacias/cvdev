@@ -31,7 +31,8 @@ CVDev::CVDev(const Arguments &arguments) : Platform::Application{arguments, NoCr
                                        windowSize(), framebufferSize());
 
     ImGuiIO& io = ImGui::GetIO();
-    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;   
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    io.ConfigWindowsMoveFromTitleBarOnly = true;
 
     GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
     GL::Renderer::enable(GL::Renderer::Feature::FaceCulling);
@@ -76,6 +77,8 @@ void CVDev::drawEvent()
     const ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoCollapse;
     ImGui::Begin("Test", nullptr, window_flags);
     ImGui::Text("Hello, world!");
+    ImGuiIO& io = ImGui::GetIO();
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", static_cast<double>(1000.0f / io.Framerate), static_cast<double>(io.Framerate));
     ImGui::End();
 
 
@@ -134,7 +137,11 @@ void CVDev::keyReleaseEvent(KeyEvent &event)
 void CVDev::pointerPressEvent(PointerEvent &event)
 {
     if (imgui_.handlePointerPressEvent(event))
+    {
+        // threeDView_->handlePointerPressEvent(event);
+
         return;
+    }
 
     // viewportManager_->handlePointerPressEvent(event);
     // threeDView1_->handlePointerPressEvent(event);
@@ -144,7 +151,11 @@ void CVDev::pointerPressEvent(PointerEvent &event)
 void CVDev::pointerReleaseEvent(PointerEvent &event)
 {
     if (imgui_.handlePointerReleaseEvent(event))
+    {
+        // threeDView_->handlePointerReleaseEvent(event);
+
         return;
+    }
 
     // viewportManager_->handlePointerReleaseEvent(event);
     // threeDView_->handlePointerReleaseEvent(event);
@@ -154,7 +165,11 @@ void CVDev::pointerReleaseEvent(PointerEvent &event)
 void CVDev::pointerMoveEvent(PointerMoveEvent &event)
 {
     if (imgui_.handlePointerMoveEvent(event))
+    {
+        // threeDView_->handlePointerMoveEvent(event);
+
         return;
+    }
 
     // viewportManager_->handlePointerMoveEvent(event);
     // threeDView1_->handlePointerMoveEvent(event);
@@ -167,6 +182,8 @@ void CVDev::scrollEvent(ScrollEvent &event)
     {
         /* Prevent scrolling the page */
         event.setAccepted();
+
+        // threeDView_->handleScrollEvent(event);
         return;
     }
 

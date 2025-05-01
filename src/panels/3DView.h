@@ -58,6 +58,11 @@ private:
     [[nodiscard]] Vector3 unproject(const Vector2 &windowPosition, Float depth) const;
     [[nodiscard]] Range2D calculateRelativeViewport(const Range2Di &absoluteViewport, const Vector2i &windowSize);
     [[nodiscard]] Range2Di calculateViewport(const Range2D &relativeViewport, const Vector2i &windowSize);
+
+    void pan(const Vector2 &position);
+    void orbit(const Vector2 &position);
+    void scroll(const Vector2 &position, const Vector2 &scrollOffset);
+    bool interactionActive_ {false};
 };
 
 #endif // PANELS_3DVIEW_H

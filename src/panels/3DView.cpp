@@ -14,6 +14,8 @@
 #include <Magnum/GL/Renderbuffer.h>
 #include <Magnum/GL/RenderbufferFormat.h>
 #include <Magnum/GL/Renderer.h>
+#include <Magnum/ImGuiIntegration/Integration.h>
+#include <Magnum/ImGuiIntegration/Widgets.h>
 
 ThreeDView::ThreeDView(const Platform::Application &applicationContext, const std::shared_ptr<Scene3D> scene)
 : applicationContext_(applicationContext)
@@ -143,6 +145,33 @@ void ThreeDView::handlePointerMoveEvent(Platform::Application::PointerMoveEvent 
             Matrix4::translation(-rotationPoint_));
 }
 
+void ThreeDView::pan(const Vector2 &position)
+{
+    if (Math::isNan(lastPosition_).all())
+        lastPosition_ = position;
+    lastPosition_ = position;
+
+    const Vector3 p = unproject(position, lastDepth_);
+    camera_->translateLocal(translationPoint_ - p); /* is Z always 0? */
+    translationPoint_ = p;
+}
+
+void ThreeDView::orbit(const Vector2 &position)
+{
+    using namespace Math::Literals;
+
+    if (Math::isNan(lastPosition_).all())
+        lastPosition_ = position;
+    const Vector2 delta = position - lastPosition_;
+    lastPosition_ = position;
+
+    camera_->transformLocal(
+        Matrix4::translation(rotationPoint_) *
+        Matrix4::rotationX(-0.01_radf * delta.y()) *
+        Matrix4::rotationY(-0.01_radf * delta.x()) *
+        Matrix4::translation(-rotationPoint_));
+}
+
 void ThreeDView::handleScrollEvent(Platform::Application::ScrollEvent &event)
 {
     const auto viewport = calculateViewport(relativeViewport_, applicationContext_.windowSize());
@@ -166,6 +195,25 @@ void ThreeDView::handleScrollEvent(Platform::Application::ScrollEvent &event)
     camera_->translateLocal(rotationPoint_*direction*0.1f);
 
     event.setAccepted();
+}
+
+void ThreeDView::scroll(const Vector2 &position, const Vector2 &scrollOffset)
+{
+    const Float currentDepth = depthAt(position);
+    const Float depth = currentDepth == 1.0f ? lastDepth_ : currentDepth;
+    const Vector3 p = unproject(position, depth);
+    /* Update the rotation point only if we're not zooming against infinite
+       depth or if the original rotation point is not yet initialized */
+    if(currentDepth != 1.0f || rotationPoint_.isZero()) {
+        rotationPoint_ = p;
+        lastDepth_ = depth;
+    }
+
+    const Float direction = scrollOffset.y();
+    if(!direction) return;
+
+    /* Move towards/backwards the rotation point in cam coords */
+    camera_->translateLocal(rotationPoint_*direction*0.1f);
 }
 
 void ThreeDView::setRelativeViewport(const Range2D &relativeViewport)
@@ -205,12 +253,12 @@ void ThreeDView::draw(SceneGraph::DrawableGroup3D &drawables)
 {
     using namespace Math::Literals;
 
-    GL::Framebuffer framebuffer{ GL::defaultFramebuffer.viewport() };
-
+    
+    // TODO: use only the viewport of the window and use depth in this framebuffer
     framebuffer_.clear(GL::FramebufferClear::Color);
 
-    const auto viewport = calculateViewport(relativeViewport_, applicationContext_.windowSize());
-    framebuffer_.setViewport(viewport)
+    // const auto viewport = calculateViewport(relativeViewport_, applicationContext_.windowSize());
+    framebuffer_/*.setViewport(viewport)*/
         .attachTexture(GL::Framebuffer::ColorAttachment{0}, texture_, 0)
         .mapForDraw({{0, {GL::Framebuffer::ColorAttachment{0}}}})
         .bind();
@@ -219,14 +267,104 @@ void ThreeDView::draw(SceneGraph::DrawableGroup3D &drawables)
 
     shader_.setColor(Color3::fromHsv({35.0_degf, 1.0f, 1.0f}))
            .draw(mesh_);
+
+
+    ImGui::Begin("3D Viewport", nullptr, ImGuiWindowFlags_NoScrollbar |
+                                         ImGuiWindowFlags_NoScrollWithMouse |
+                                         ImGuiWindowFlags_NoCollapse);
+    ImGui::GetStyle().WindowPadding = ImVec2(0.0f, 0.0f);
+
+    // const auto windowViewport = ImGui::GetWindowViewport();
+    // Debug{} << "GetContentRegionAvail: " << ImGui::GetContentRegionAvail().x << ", " << ImGui::GetContentRegionAvail().y;
+    // Debug{} << ImGui::GetCursorScreenPos().x << ", " << ImGui::GetCursorScreenPos().y;
+    // Debug{} << "GetItemRectMin: " << ImGui::GetItemRectMin().x << ", " << ImGui::GetItemRectMin().y;
+    // Debug{} << "GetWindowPos: " << ImGui::GetWindowPos().x << ", " << ImGui::GetWindowPos().y;
+    // Debug{} << "GetWindowContentRegionMin: " << ImGui::GetWindowContentRegionMin().x << ", " << ImGui::GetWindowContentRegionMin().y;
+    // Debug{} << ImGui::GetWindowSize().x << ", " << ImGui::GetWindowSize().y;
+    // setViewport({{static_cast<Int>(ImGui::GetWindowPos().x), static_cast<Int>(ImGui::GetWindowPos().y)},
+    //              {static_cast<Int>(ImGui::GetWindowSize().x), static_cast<Int>(ImGui::GetWindowSize().y)}});
+    // const ImVec2 contentRegionMin = {ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMin().x, 
+    //                                  ImGui::GetWindowPos().y + ImGui::GetWindowContentRegionMin().y};
+    // Debug{} << contentRegionMin.x << ", " << contentRegionMin.y;
+    // setViewport({{static_cast<Int>(contentRegionMin.x), static_cast<Int>(contentRegionMin.y)},
+    //              {static_cast<Int>(ImGui::GetContentRegionAvail().x), static_cast<Int>(ImGui::GetContentRegionAvail().y)}});
+    // Debug{} << viewport_;
+
+    const bool isItemHovered = ImGui::IsItemHovered();
+    const bool isItemFocused = ImGui::IsItemFocused();
+    const ImVec2 mousePositionAbsolute = ImGui::GetMousePos();
+    const ImVec2 screenPositionAbsolute = ImGui::GetItemRectMin();
+    const ImVec2 mousePositionRelative = ImVec2(mousePositionAbsolute.x - screenPositionAbsolute.x, mousePositionAbsolute.y - screenPositionAbsolute.y);
+
+    if (interactionActive_ || // previously interacting with the scene OR
+        (ImGui::IsWindowHovered() && !isItemHovered)) // not dragging the title bar
+    {
+        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+        {
+            lastPosition_ = Vector2(mousePositionAbsolute);
+            interactionActive_ = true;
+
+            const Float currentDepth = depthAt(lastPosition_);
+            const Float depth = currentDepth == 1.0f ? lastDepth_ : currentDepth;
+            translationPoint_ = unproject(lastPosition_, depth);
+            /* Update the rotation point only if we're not zooming against infinite
+               depth or if the original rotation point is not yet initialized */
+            if (currentDepth != 1.0f || rotationPoint_.isZero())
+            {
+                rotationPoint_ = translationPoint_;
+                lastDepth_ = depth;
+            }
+        }
+        else if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+        {
+            interactionActive_ = false;
+        }
+        
+        if (ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+        {
+            if (ImGui::IsKeyDown(ImGuiKey_LeftShift))
+            {
+                pan(Vector2(mousePositionAbsolute));
+            }
+            else
+            {
+                orbit(Vector2(mousePositionAbsolute));
+            }
+        }
+        else
+        {
+            scroll(Vector2(mousePositionAbsolute), Vector2(ImGui::GetIO().MouseWheel));
+        }
+    }
+
     
-    ImGui::Begin("3D Viewport", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-    
-    const ImTextureID textureID = texture_.id();
-    ImGui::Image(textureID, ImGui::GetWindowSize(),
-                            ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f)); // flip y axis (Magnum origin is top-left; ImGui uses bottom-left).
+    const ImTextureID textureID = ImGuiIntegration::textureId(texture_);
+    ImGui::Image(textureID, ImGui::GetContentRegionAvail(),
+                 ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f)); // flip y axis (Magnum origin is top-left; ImGui uses bottom-left).
+
+    // ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(i - 1.0f, i - 1.0f));
+    // const bool viewportClicked = ImGui::ImageButton("image", textureID, ImGui::GetContentRegionAvail(), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+    // ImGui::Text("Viewport clicked: %s", viewportClicked ? "Yes" : "No");
 
     ImGui::End();
 
     GL::defaultFramebuffer.bind();
+
+    ImGui::Begin("Another");
+
+    ImGui::Text("Is item hovered? %s", isItemHovered ? "Yes" : "No");
+    ImGui::Text("Is item focused? %s", isItemFocused ? "Yes" : "No");
+    ImGui::Text("Position absolute: %f, %f", static_cast<double>(mousePositionAbsolute.x), static_cast<double>(mousePositionAbsolute.y));
+    ImGui::Text("Position relative: %f, %f", static_cast<double>(mousePositionRelative.x), static_cast<double>(mousePositionRelative.y));
+    ImGui::Text("Mouse down: %s", ImGui::IsMouseDown(ImGuiMouseButton_Left) ? "Yes" : "No");
+    ImGui::Text("Mouse clicked: %s", ImGui::IsMouseClicked(ImGuiMouseButton_Left) ? "Yes" : "No");
+    ImGui::Text("Mouse dragging: %s", ImGui::IsMouseDragging(ImGuiMouseButton_Left) ? "Yes" : "No");
+    ImGui::Text("Mouse released: %s", ImGui::IsMouseReleased(ImGuiMouseButton_Left) ? "Yes" : "No");
+    ImGui::Text("Window hovered: %s", ImGui::IsWindowHovered() ? "Yes" : "No");
+    ImGui::Text("Window focused: %s", ImGui::IsWindowFocused() ? "Yes" : "No");
+    ImGui::Text("Mouse wheel magnitude: %.2f", static_cast<double>(ImGui::GetIO().MouseWheel));
+    ImGui::Text("interactionActive_: %s", interactionActive_ ? "Yes" : "No");
+    // ImGui::Text("Mouse hovering viewport: %s", ImGui::IsMouseHoveringRect(contentRegionMin, ImGui::GetContentRegionAvail()) ? "Yes" : "No");
+
+    ImGui::End();
 }
