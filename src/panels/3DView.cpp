@@ -11,17 +11,22 @@
 #include <Magnum/PixelFormat.h>
 #include <Magnum/ImageView.h>
 #include <Magnum/GL/TextureFormat.h>
-#include <Magnum/GL/Renderbuffer.h>
 #include <Magnum/GL/RenderbufferFormat.h>
 #include <Magnum/GL/Renderer.h>
 #include <Magnum/ImGuiIntegration/Integration.h>
 #include <Magnum/ImGuiIntegration/Widgets.h>
+#include <string>
+
+Int ThreeDView::instancesCount_ = 0;
 
 ThreeDView::ThreeDView(const Platform::Application &applicationContext, const std::shared_ptr<Scene3D> scene)
 : applicationContext_(applicationContext)
 , scene_(scene)
 , framebuffer_(GL::defaultFramebuffer.viewport())
+, instanceID_(instancesCount_)
 {
+    instancesCount_++;
+    
     using namespace Math::Literals;
     camera_ = std::make_unique<Camera>(*scene_);
     camera_->rotateZLocal(45.0_degf)
@@ -40,6 +45,10 @@ ThreeDView::ThreeDView(const Platform::Application &applicationContext, const st
         .setMagnificationFilter(GL::SamplerFilter::Linear)
         .setMinificationFilter(GL::SamplerFilter::Linear)
         .setStorage(1, GL::TextureFormat::RGBA8, applicationContext_.windowSize());
+    depthStencil_.setStorage(GL::RenderbufferFormat::Depth24Stencil8, applicationContext_.windowSize());
+
+    framebuffer_.attachTexture(GL::Framebuffer::ColorAttachment{0}, texture_, 0)
+        .attachRenderbuffer(GL::Framebuffer::BufferAttachment::DepthStencil, depthStencil_);
 }
 
 Float ThreeDView::depthAt(const Vector2 &windowPosition)
@@ -50,10 +59,12 @@ Float ThreeDView::depthAt(const Vector2 &windowPosition)
     const Vector2i position = windowPosition * applicationContext_.framebufferSize() / Vector2{applicationContext_.windowSize()};
     const Vector2i fbPosition{position.x(), GL::defaultFramebuffer.viewport().sizeY() - position.y() - 1};
 
-    GL::defaultFramebuffer.mapForRead(GL::DefaultFramebuffer::ReadAttachment::Front);
-    Image2D data = GL::defaultFramebuffer.read(
-        Range2Di::fromSize(fbPosition, Vector2i{1}).padded(Vector2i{2}),
-        {GL::PixelFormat::DepthComponent, GL::PixelType::Float});
+    const Image2D data = framebuffer_.read(Range2Di::fromSize(fbPosition, Vector2i{1}).padded(Vector2i{2}),
+                                           {GL::PixelFormat::DepthComponent, GL::PixelType::Float});
+    // GL::defaultFramebuffer.mapForRead(GL::DefaultFramebuffer::ReadAttachment::Front);
+    // Image2D data = GL::defaultFramebuffer.read(
+    //     Range2Di::fromSize(fbPosition, Vector2i{1}).padded(Vector2i{2}),
+    //     {GL::PixelFormat::DepthComponent, GL::PixelType::Float});
 
     /* TODO: change to just Math::min<Float>(data.pixels<Float>() when the
        batch functions in Math can handle 2D views */
@@ -253,13 +264,26 @@ void ThreeDView::draw(SceneGraph::DrawableGroup3D &drawables)
 {
     using namespace Math::Literals;
 
-    
-    // TODO: use only the viewport of the window and use depth in this framebuffer
-    framebuffer_.clear(GL::FramebufferClear::Color);
+    framebuffer_.clear(GL::FramebufferClear::Color | GL::FramebufferClear::Depth);
+
+    const std::string windowName = "3DViewport_" + std::to_string(instanceID_);
+    // Debug {} << windowName.c_str();
+    ImGui::Begin(windowName.c_str(), nullptr, ImGuiWindowFlags_NoScrollbar | 
+                                              ImGuiWindowFlags_NoScrollWithMouse | 
+                                              ImGuiWindowFlags_NoCollapse);
+    ImGui::GetStyle().WindowPadding = ImVec2(0.0f, 0.0f);
+
+    const bool isItemHovered = ImGui::IsItemHovered();
+    const bool isItemFocused = ImGui::IsItemFocused();
+    const ImVec2 mousePositionAbsolute = ImGui::GetMousePos();
+    const ImVec2 screenPositionAbsolute = ImGui::GetItemRectMin();
+    const ImVec2 screenSize = ImGui::GetContentRegionAvail();
+    const ImVec2 mousePositionRelative = ImVec2(mousePositionAbsolute.x - screenPositionAbsolute.x, mousePositionAbsolute.y - screenPositionAbsolute.y);
+
+    // const Range2Di windowRange = Range2Di(Vector2i(Vector2(screenPositionAbsolute)), Vector2i(Vector2(screenSize)));
 
     // const auto viewport = calculateViewport(relativeViewport_, applicationContext_.windowSize());
-    framebuffer_/*.setViewport(viewport)*/
-        .attachTexture(GL::Framebuffer::ColorAttachment{0}, texture_, 0)
+    framebuffer_/*.setViewport(windowRange)*/
         .mapForDraw({{0, {GL::Framebuffer::ColorAttachment{0}}}})
         .bind();
     
@@ -267,12 +291,6 @@ void ThreeDView::draw(SceneGraph::DrawableGroup3D &drawables)
 
     shader_.setColor(Color3::fromHsv({35.0_degf, 1.0f, 1.0f}))
            .draw(mesh_);
-
-
-    ImGui::Begin("3D Viewport", nullptr, ImGuiWindowFlags_NoScrollbar |
-                                         ImGuiWindowFlags_NoScrollWithMouse |
-                                         ImGuiWindowFlags_NoCollapse);
-    ImGui::GetStyle().WindowPadding = ImVec2(0.0f, 0.0f);
 
     // const auto windowViewport = ImGui::GetWindowViewport();
     // Debug{} << "GetContentRegionAvail: " << ImGui::GetContentRegionAvail().x << ", " << ImGui::GetContentRegionAvail().y;
@@ -289,12 +307,6 @@ void ThreeDView::draw(SceneGraph::DrawableGroup3D &drawables)
     // setViewport({{static_cast<Int>(contentRegionMin.x), static_cast<Int>(contentRegionMin.y)},
     //              {static_cast<Int>(ImGui::GetContentRegionAvail().x), static_cast<Int>(ImGui::GetContentRegionAvail().y)}});
     // Debug{} << viewport_;
-
-    const bool isItemHovered = ImGui::IsItemHovered();
-    const bool isItemFocused = ImGui::IsItemFocused();
-    const ImVec2 mousePositionAbsolute = ImGui::GetMousePos();
-    const ImVec2 screenPositionAbsolute = ImGui::GetItemRectMin();
-    const ImVec2 mousePositionRelative = ImVec2(mousePositionAbsolute.x - screenPositionAbsolute.x, mousePositionAbsolute.y - screenPositionAbsolute.y);
 
     if (interactionActive_ || // previously interacting with the scene OR
         (ImGui::IsWindowHovered() && !isItemHovered)) // not dragging the title bar

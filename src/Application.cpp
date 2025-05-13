@@ -7,6 +7,7 @@
 #include <Magnum/GL/PixelFormat.h>
 #include <Magnum/Math/FunctionsBatch.h>
 #include <Magnum/Trade/MeshData.h>
+#include <Magnum/Math/Time.h>
 
 using namespace Magnum;
 
@@ -87,7 +88,7 @@ void CVDev::drawEvent()
     ImGui::End();
 
     // threeDView1_->setViewport(Range2Di({0, 0}, {windowSize().x()/2, windowSize().y()}));
-    // threeDView1_->draw(drawables_);
+    threeDView1_->draw(drawables_);
 
     // threeDView_->setViewport(Range2Di({windowSize().x()/2, 0}, {windowSize()}));
     threeDView_->draw(drawables_);

@@ -5,6 +5,7 @@
 #include <Magnum/Math/Range.h>
 #include <Magnum/Platform/GlfwApplication.h>
 #include <Magnum/GL/Framebuffer.h>
+#include <Magnum/GL/Renderbuffer.h>
 #include <Magnum/GL/Mesh.h>
 #include <Magnum/GL/Texture.h>
 #include <Magnum/Shaders/FlatGL.h>
@@ -40,6 +41,7 @@ private:
     Float lastDepth_;
     Vector2 lastPosition_{Constants::nan()};
     Vector3 rotationPoint_, translationPoint_;
+    GL::Renderbuffer depthStencil_;
 
     const Platform::Application &applicationContext_;
     std::shared_ptr<Scene3D> scene_;
@@ -63,6 +65,9 @@ private:
     void orbit(const Vector2 &position);
     void scroll(const Vector2 &position, const Vector2 &scrollOffset);
     bool interactionActive_ {false};
+
+    Int instanceID_ {-1};
+    static Int instancesCount_;
 };
 
 #endif // PANELS_3DVIEW_H
