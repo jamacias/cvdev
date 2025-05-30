@@ -14,14 +14,6 @@ using namespace Magnum;
 class ViewportManager
 {
 public:
-    enum class EBorder : uint8_t
-    {
-        TOP = 0,
-        RIGHT,
-        BOTTOM,
-        LEFT
-    };
-
     explicit ViewportManager(const Platform::Application &applicationContext, const std::shared_ptr<Scene3D> scene = std::make_shared<Scene3D>());
 
     void handlePointerPressEvent(Platform::Application::PointerEvent &event);
@@ -29,15 +21,16 @@ public:
     void handlePointerMoveEvent(Platform::Application::PointerMoveEvent &event);
     void handleScrollEvent(Platform::Application::ScrollEvent &event);
 
-    void createNewViewport(const Vector2 &position);
+    void createNewViewport(const Vector2 &position, const ThreeDView::EBorder &direction = ThreeDView::EBorder::LEFT);
 
     void draw(SceneGraph::DrawableGroup3D &drawables);
 
-private:    
+private:
+    std::optional<ThreeDView::EBorder> findBorder(const Range2Di &viewport, const Vector2 &position) const;
     const Platform::Application &applicationContext_;
     std::shared_ptr<Scene3D> scene_;
     std::vector<ThreeDView> viewports_;
-    bool borderInteractionActive_ {false};
+    std::optional<ThreeDView::EBorder> activatedBorder_ {std::nullopt};
     ThreeDView* borderInteractionViewport_ {nullptr};
 };
 

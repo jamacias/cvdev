@@ -22,18 +22,11 @@ void ViewportManager::handlePointerPressEvent(Platform::Application::PointerEven
         return;
 
     const auto viewport = activeViewport->getViewport();
-    const Int borderActivationThreshold = 5; // px
-    if (Math::abs(event.position().x() - viewport.left())   < borderActivationThreshold ||
-        Math::abs(event.position().x() - viewport.right())  < borderActivationThreshold ||
-        Math::abs(event.position().y() - viewport.top())    < borderActivationThreshold ||
-        Math::abs(event.position().y() - viewport.bottom()) < borderActivationThreshold)
+
+    activatedBorder_ = findBorder(viewport, event.position());
+    if (activatedBorder_)
     {
-        // We are interacting with the border
-        borderInteractionActive_ = true;
-
         borderInteractionViewport_ = &*activeViewport;
-
-        return;
     }
 
     for (auto &viewport : viewports_)
@@ -42,13 +35,35 @@ void ViewportManager::handlePointerPressEvent(Platform::Application::PointerEven
     }
 }
 
+std::optional<ThreeDView::EBorder> ViewportManager::findBorder(const Range2Di &viewport, const Vector2 &position) const
+{
+    const Int borderActivationThreshold = 10; // px
+    if (Math::abs(position.x() - viewport.left()) < borderActivationThreshold)
+    {
+        return ThreeDView::EBorder::LEFT;
+    }
+    else if (Math::abs(position.x() - viewport.right()) < borderActivationThreshold)
+    {
+        return ThreeDView::EBorder::RIGHT;
+    }
+    else if (Math::abs(position.y() - viewport.top()) < borderActivationThreshold)
+    {
+        return ThreeDView::EBorder::TOP;
+    }
+    else if (Math::abs(position.y() - viewport.bottom()) < borderActivationThreshold)
+    {
+        return ThreeDView::EBorder::BOTTOM;
+    }
+
+    return std::nullopt;
+}
+
 void ViewportManager::handlePointerReleaseEvent(Platform::Application::PointerEvent &event)
 {
-    if (borderInteractionActive_)
+    if (activatedBorder_)
     {
-        borderInteractionActive_ = false;
+        activatedBorder_ = std::nullopt;
         borderInteractionViewport_ = nullptr;
-        return;
     }
 
     for (auto &viewport : viewports_)
@@ -59,18 +74,24 @@ void ViewportManager::handlePointerReleaseEvent(Platform::Application::PointerEv
 
 void ViewportManager::handlePointerMoveEvent(Platform::Application::PointerMoveEvent &event)
 {
-    if (borderInteractionActive_)
+    if (activatedBorder_)
     {
         CORRADE_INTERNAL_ASSERT(borderInteractionViewport_ != nullptr);
         // Resize the viewport accordingly
         // TODO: what would happen if we go over to another viewport?
         const auto originalViewport = borderInteractionViewport_->getViewport();
         // Move the the edge e.g., by selecting the min
-        // const auto newRange = originalViewport.translated(Vector2i(event.relativePosition().x(), 0));
         auto newRange = originalViewport;
         // TODO: remember which edge is selected and drag that one
-        newRange.left() = event.position().x();
-        // const auto viewport = Range2Di::fromSize();
+        const auto border = *activatedBorder_;
+        if (border == ThreeDView::EBorder::LEFT)
+            newRange.left() = event.position().x();
+        else if (border == ThreeDView::EBorder::RIGHT)
+            newRange.right() = event.position().x();
+        else if (border == ThreeDView::EBorder::TOP)
+            newRange.top() = event.position().y();
+        else if (border == ThreeDView::EBorder::BOTTOM)
+            newRange.bottom() = event.position().y();
         Debug {} << newRange;
         borderInteractionViewport_->setViewport(newRange);
 
@@ -91,7 +112,7 @@ void ViewportManager::handleScrollEvent(Platform::Application::ScrollEvent &even
     }
 }
 
-void ViewportManager::createNewViewport(const Vector2 &position)
+void ViewportManager::createNewViewport(const Vector2 &position, const ThreeDView::EBorder &direction)
 {
     viewports_.reserve(viewports_.capacity() + 1);
 
@@ -113,10 +134,21 @@ void ViewportManager::createNewViewport(const Vector2 &position)
         
         const auto activeViewportRange = Range2D(activeViewport->getViewport());
 
-        const auto newViewportSize = activeViewportRange.scaled({0.5, 1.0}).size();
-        activeViewport->setViewport(Range2Di(Range2D::fromSize(activeViewportRange.min(), newViewportSize)));
+        Vector2 newViewportSize;
+        Vector2 newViewportTranslationFactor;
+        if (direction == ThreeDView::EBorder::RIGHT || direction == ThreeDView::EBorder::LEFT)
+        {
+            newViewportSize = activeViewportRange.scaled({0.5, 1.0}).size();
+            newViewportTranslationFactor = Vector2{1.0, 0.0};
+        }
+        else // == direction is top or bottom
+        {
+            newViewportSize = activeViewportRange.scaled({1.0, 0.5}).size();
+            newViewportTranslationFactor = Vector2{0.0, 1.0};
+        }
 
-        newViewport = Range2Di(Range2D::fromSize(activeViewportRange.translated(newViewportSize * Vector2{1.0, 0.0}).min(), newViewportSize));
+        activeViewport->setViewport(Range2Di(Range2D::fromSize(activeViewportRange.min(), newViewportSize)));
+        newViewport = Range2Di(Range2D::fromSize(activeViewportRange.translated(newViewportSize * newViewportTranslationFactor).min(), newViewportSize));
     }
 
     Debug {} << "New viewport: " << newViewport;

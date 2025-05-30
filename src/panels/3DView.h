@@ -13,6 +13,14 @@ using namespace Magnum;
 class ThreeDView
 {
 public:
+    enum class EBorder : uint8_t
+    {
+        TOP = 0,
+        RIGHT,
+        BOTTOM,
+        LEFT
+    };
+
     explicit ThreeDView(const Platform::Application &applicationContext, const std::shared_ptr<Scene3D> scene = std::make_shared<Scene3D>());
     // ~ThreeDView() = default;
     // ThreeDView(const ThreeDView&) = delete;
