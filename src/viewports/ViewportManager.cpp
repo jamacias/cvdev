@@ -121,6 +121,7 @@ void ViewportManager::createNewViewport(const Vector2 &position, const ThreeDVie
     {
         Debug {} << "No viewports found, create the first one";
         newViewport = Range2Di::fromSize({0, 0}, applicationContext_.windowSize());
+        // newViewport = Range2Di({0, applicationContext_.windowSize().y() / 3}, applicationContext_.windowSize());
     }
     else
     {
@@ -151,7 +152,7 @@ void ViewportManager::createNewViewport(const Vector2 &position, const ThreeDVie
         newViewport = Range2Di(Range2D::fromSize(activeViewportRange.translated(newViewportSize * newViewportTranslationFactor).min(), newViewportSize));
     }
 
-    Debug {} << "New viewport: " << newViewport;
+    Debug {} << "New viewport: " << newViewport << ", direction: " << ThreeDView::to_string(direction);
 
     auto newView = ThreeDView(applicationContext_, scene_);
     newView.setViewport(newViewport);

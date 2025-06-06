@@ -48,9 +48,9 @@ CVDev::CVDev(const Arguments &arguments) : Platform::Application{arguments, NoCr
     imagePreview_ = std::make_unique<ImagePreview>();
 
     viewportManager_ = std::make_unique<ViewportManager>(*this, scene_);
-    viewportManager_->createNewViewport({1, 1});
+    viewportManager_->createNewViewport({1, 1}, ThreeDView::EBorder::LEFT);
 
-    viewportManager_->createNewViewport({1, 1});
+    viewportManager_->createNewViewport({1, 1}, ThreeDView::EBorder::BOTTOM);
 
     // viewportManager_->createNewViewport({1200, 1});
 }

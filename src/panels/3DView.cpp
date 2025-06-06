@@ -202,53 +202,20 @@ void ThreeDView::draw(SceneGraph::DrawableGroup3D &drawables)
 {
     using namespace Math::Literals;
 
-    if (viewportActive_) Debug {} << "Viewport active";
-
-    Debug{} << "relative min: " << relativeViewport_.min() << ", relative max: " << relativeViewport_.max() << "; application size: " << applicationContext_.windowSize();
-
     const auto originalViewport = GL::defaultFramebuffer.viewport();
-    // const Range2D flippedRelativeViewport{Vector2(relativeViewport_.min().x(), relativeViewport_.min().y()),
-                                        //   Vector2(relativeViewport_.max().x(), 1.0f - relativeViewport_.min().y())};
-    // const Float halfSizeY = relativeViewport_.sizeY();
-    // const Range2D flippedRelativeViewport(Vector2(relativeViewport_.min().x(), Math::fmod(relativeViewport_.min().y() + halfSizeY, 1.0f)),
-    //                                       Vector2(relativeViewport_.max().x(), Math::fmod(relativeViewport_.max().y() + halfSizeY, 1.0f)));
+    
+    // Convert between TL origin to BL origin (default clip space in OpenGL)
     Range2D flippedRelativeViewport = relativeViewport_.translated(Vector2(0.0f, relativeViewport_.sizeY()));
-    Debug{} << "Flipped relative min: " << flippedRelativeViewport.min() << ", max: " << flippedRelativeViewport.max();
     if (flippedRelativeViewport.max().y() > 1.0f)
     {
-        Debug {} << "Over 1.0f";
         flippedRelativeViewport = flippedRelativeViewport.translated(Vector2(0.0f, -1.0f));
     }
 
-    // const Range2D flippedRelativeViewport = relativeViewport_.translated(-Vector2(0.0f, relativeViewport_.min().y()));
-    // const Range2D flippedRelativeViewport = relativeViewport_.translated(-Vector2(0.0f, 1.0f - relativeViewport_.sizeY()));
-    // Range2D flippedRelativeViewport = relativeViewport_;
-    // flippedRelativeViewport.bottom() += relativeViewport_.sizeY();
-    // flippedRelativeViewport.top() += relativeViewport_.sizeY();
-    // TODO: transform with multiple by -1 to invert and translate
-    // const Range2D flippedRelativeViewport = relativeViewport_.scaledFromCenter({1.0f, -1.0f}).translated(-Vector2(0.0f, relativeViewport_.min().y()));
-    Debug{} << "Flipped relative min: " << flippedRelativeViewport.min() << ", max: " << flippedRelativeViewport.max();
-    // Range2D flippedRelativeViewport{};
-    // flippedRelativeViewport.bottom() = relativeViewport_.top() - relativeViewport_.bottom();
-    // flippedRelativeViewport.top() = relativeViewport_.top() - relativeViewport_.bottom();
-    // flippedRelativeViewport.left() = relativeViewport_.left();
-    // flippedRelativeViewport.right() = relativeViewport_.right();
-    // Range2D flippedRelativeViewport({0.0f, 0.33f}, {1.0f, 1.0f});
-    // Range2D flippedRelativeViewport({0.0f, 0.0f}, {1.0f, 0.66f});
     const auto viewport = calculateViewport(flippedRelativeViewport, applicationContext_.windowSize());
-    // const auto viewport = calculateViewport(relativeViewport_, applicationContext_.windowSize());
     GL::defaultFramebuffer.setViewport(viewport);
 
-
-    // Debug{} << "min: " << viewport.min() << ", max: " << viewport.max() << "; application size: " << applicationContext_.windowSize();
-    // Debug{} << "relative min: " << relativeViewport_.min() << ", relative max: " << relativeViewport_.max() << "; min: " << viewport.min() << ", max: " << viewport.max() << "; application size: " << applicationContext_.windowSize();
-
-    // GL::defaultFramebuffer.setViewport(Range2Di(Vector2i(0, 960 - 240), applicationContext_.windowSize()));
-    // GL::defaultFramebuffer.setViewport(flippedViewport);
-    
     camera_->draw(drawables);
 
-    // TODO: instead of changing the viewport, use the projection matrix with a scale to flip
     shader_.setColor(Color3::fromHsv({35.0_degf, 1.0f, 1.0f}))
            .draw(mesh_);
     
