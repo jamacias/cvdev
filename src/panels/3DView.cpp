@@ -71,6 +71,8 @@ void ThreeDView::handlePointerPressEvent(Platform::Application::PointerEvent &ev
 
     viewportActive_ = true;
 
+    Debug {} << "Viewport: " << viewport << " is active";
+
     /* Update the move position on press as well so touch movement (that emits
        no hover pointerMoveEvent()) works without jumps */
     lastPosition_ = event.position();
@@ -136,6 +138,7 @@ void ThreeDView::handleScrollEvent(Platform::Application::ScrollEvent &event)
     const auto viewport = calculateViewport(relativeViewport_, applicationContext_.windowSize());
     if (!viewport.contains(Vector2i{event.position()}))
         return;
+    Debug{} << "Event position is " << event.position() << " at viewport " << viewport;
 
     const Float currentDepth = depthAt(event.position());
     const Float depth = currentDepth == 1.0f ? lastDepth_ : currentDepth;
@@ -158,8 +161,8 @@ void ThreeDView::handleScrollEvent(Platform::Application::ScrollEvent &event)
 
 void ThreeDView::setRelativeViewport(const Range2D &relativeViewport)
 {
-    CORRADE_INTERNAL_ASSERT(relativeViewport.min() >= Vector2{0.0f});
-    CORRADE_INTERNAL_ASSERT(relativeViewport.max() <= Vector2{1.0f});
+    CORRADE_INTERNAL_ASSERT((relativeViewport.min() >= Vector2{0.0f}).all());
+    CORRADE_INTERNAL_ASSERT((relativeViewport.max() <= Vector2{1.0f}).all());
 
     relativeViewport_ = relativeViewport;
     viewport_ = calculateViewport(relativeViewport, applicationContext_.windowSize());
@@ -167,8 +170,8 @@ void ThreeDView::setRelativeViewport(const Range2D &relativeViewport)
 
 void ThreeDView::setViewport(const Range2Di &viewport)
 {
-    CORRADE_INTERNAL_ASSERT(viewport.min() >= Vector2i{0});
-    CORRADE_INTERNAL_ASSERT(viewport.max() <= applicationContext_.windowSize());
+    CORRADE_INTERNAL_ASSERT((viewport.min() >= Vector2i{0}).all());
+    CORRADE_INTERNAL_ASSERT((viewport.max() <= applicationContext_.windowSize()).all());
     
     viewport_ = viewport;
     relativeViewport_ = calculateRelativeViewport(viewport, applicationContext_.windowSize());
@@ -181,11 +184,17 @@ Range2Di ThreeDView::getViewport() const
 
 Range2D ThreeDView::calculateRelativeViewport(const Range2Di &absoluteViewport, const Vector2i &windowSize)
 {
+    CORRADE_INTERNAL_ASSERT((absoluteViewport.min() >= Vector2i{0}).all());
+    CORRADE_INTERNAL_ASSERT((absoluteViewport.max() <= applicationContext_.windowSize()).all());
+
     return Range2D{Vector2{absoluteViewport.min()} / Vector2{windowSize}, Vector2{absoluteViewport.max()} / Vector2{windowSize}};
 }
 
 Range2Di ThreeDView::calculateViewport(const Range2D &relativeViewport, const Vector2i &windowSize)
 {
+    CORRADE_INTERNAL_ASSERT((relativeViewport_.min() >= Vector2{0.0f}).all());
+    CORRADE_INTERNAL_ASSERT((relativeViewport_.max() <= Vector2{1.0f}).all());
+
     return Range2Di{relativeViewport.min() * windowSize, relativeViewport.max() * windowSize};
 }
 
@@ -193,12 +202,53 @@ void ThreeDView::draw(SceneGraph::DrawableGroup3D &drawables)
 {
     using namespace Math::Literals;
 
+    if (viewportActive_) Debug {} << "Viewport active";
+
+    Debug{} << "relative min: " << relativeViewport_.min() << ", relative max: " << relativeViewport_.max() << "; application size: " << applicationContext_.windowSize();
+
     const auto originalViewport = GL::defaultFramebuffer.viewport();
-    const auto viewport = calculateViewport(relativeViewport_, applicationContext_.windowSize());
+    // const Range2D flippedRelativeViewport{Vector2(relativeViewport_.min().x(), relativeViewport_.min().y()),
+                                        //   Vector2(relativeViewport_.max().x(), 1.0f - relativeViewport_.min().y())};
+    // const Float halfSizeY = relativeViewport_.sizeY();
+    // const Range2D flippedRelativeViewport(Vector2(relativeViewport_.min().x(), Math::fmod(relativeViewport_.min().y() + halfSizeY, 1.0f)),
+    //                                       Vector2(relativeViewport_.max().x(), Math::fmod(relativeViewport_.max().y() + halfSizeY, 1.0f)));
+    Range2D flippedRelativeViewport = relativeViewport_.translated(Vector2(0.0f, relativeViewport_.sizeY()));
+    Debug{} << "Flipped relative min: " << flippedRelativeViewport.min() << ", max: " << flippedRelativeViewport.max();
+    if (flippedRelativeViewport.max().y() > 1.0f)
+    {
+        Debug {} << "Over 1.0f";
+        flippedRelativeViewport = flippedRelativeViewport.translated(Vector2(0.0f, -1.0f));
+    }
+
+    // const Range2D flippedRelativeViewport = relativeViewport_.translated(-Vector2(0.0f, relativeViewport_.min().y()));
+    // const Range2D flippedRelativeViewport = relativeViewport_.translated(-Vector2(0.0f, 1.0f - relativeViewport_.sizeY()));
+    // Range2D flippedRelativeViewport = relativeViewport_;
+    // flippedRelativeViewport.bottom() += relativeViewport_.sizeY();
+    // flippedRelativeViewport.top() += relativeViewport_.sizeY();
+    // TODO: transform with multiple by -1 to invert and translate
+    // const Range2D flippedRelativeViewport = relativeViewport_.scaledFromCenter({1.0f, -1.0f}).translated(-Vector2(0.0f, relativeViewport_.min().y()));
+    Debug{} << "Flipped relative min: " << flippedRelativeViewport.min() << ", max: " << flippedRelativeViewport.max();
+    // Range2D flippedRelativeViewport{};
+    // flippedRelativeViewport.bottom() = relativeViewport_.top() - relativeViewport_.bottom();
+    // flippedRelativeViewport.top() = relativeViewport_.top() - relativeViewport_.bottom();
+    // flippedRelativeViewport.left() = relativeViewport_.left();
+    // flippedRelativeViewport.right() = relativeViewport_.right();
+    // Range2D flippedRelativeViewport({0.0f, 0.33f}, {1.0f, 1.0f});
+    // Range2D flippedRelativeViewport({0.0f, 0.0f}, {1.0f, 0.66f});
+    const auto viewport = calculateViewport(flippedRelativeViewport, applicationContext_.windowSize());
+    // const auto viewport = calculateViewport(relativeViewport_, applicationContext_.windowSize());
     GL::defaultFramebuffer.setViewport(viewport);
+
+
+    // Debug{} << "min: " << viewport.min() << ", max: " << viewport.max() << "; application size: " << applicationContext_.windowSize();
+    // Debug{} << "relative min: " << relativeViewport_.min() << ", relative max: " << relativeViewport_.max() << "; min: " << viewport.min() << ", max: " << viewport.max() << "; application size: " << applicationContext_.windowSize();
+
+    // GL::defaultFramebuffer.setViewport(Range2Di(Vector2i(0, 960 - 240), applicationContext_.windowSize()));
+    // GL::defaultFramebuffer.setViewport(flippedViewport);
     
     camera_->draw(drawables);
 
+    // TODO: instead of changing the viewport, use the projection matrix with a scale to flip
     shader_.setColor(Color3::fromHsv({35.0_degf, 1.0f, 1.0f}))
            .draw(mesh_);
     

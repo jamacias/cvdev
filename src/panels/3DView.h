@@ -20,6 +20,17 @@ public:
         BOTTOM,
         LEFT
     };
+    // static constexpr char * to_string(const EBorder b);
+    static constexpr const char* to_string(EBorder e) noexcept
+    {
+        switch (e)
+        {
+            case EBorder::TOP:    return "TOP";
+            case EBorder::RIGHT:  return "RIGHT";
+            case EBorder::BOTTOM: return "BOTTOM";
+            default:              return "LEFT";
+        }
+    }
 
     explicit ThreeDView(const Platform::Application &applicationContext, const std::shared_ptr<Scene3D> scene = std::make_shared<Scene3D>());
     // ~ThreeDView() = default;
