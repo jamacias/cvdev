@@ -52,6 +52,10 @@ CVDev::CVDev(const Arguments &arguments) : Platform::Application{arguments, NoCr
 
     viewportManager_->createNewViewport({1, 1}, ThreeDView::EBorder::BOTTOM);
 
+    viewportManager_->createNewViewport({1, 1}, ThreeDView::EBorder::BOTTOM);
+
+    viewportManager_->createNewViewport({1, 600}, ThreeDView::EBorder::TOP);
+
     // viewportManager_->createNewViewport({1200, 1});
 }
 
@@ -66,8 +70,11 @@ void CVDev::drawEvent()
     else if(!ImGui::GetIO().WantTextInput && isTextInputActive())
         stopTextInput();
 
-    ImGui::Begin("Test");
+    const ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize;
+    ImGui::Begin("Test", nullptr, window_flags);
     ImGui::Text("Hello, world!");
+    const ImGuiIO& io = ImGui::GetIO();
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", static_cast<double>(1000.0f / io.Framerate), static_cast<double>(io.Framerate));
     ImGui::End();
 
     // threeDView1_->setViewport(Range2Di({0, 0}, {windowSize().x()/2, windowSize().y()}));

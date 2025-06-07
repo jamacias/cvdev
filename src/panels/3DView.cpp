@@ -205,11 +205,9 @@ void ThreeDView::draw(SceneGraph::DrawableGroup3D &drawables)
     const auto originalViewport = GL::defaultFramebuffer.viewport();
     
     // Convert between TL origin to BL origin (default clip space in OpenGL)
-    Range2D flippedRelativeViewport = relativeViewport_.translated(Vector2(0.0f, relativeViewport_.sizeY()));
-    if (flippedRelativeViewport.max().y() > 1.0f)
-    {
-        flippedRelativeViewport = flippedRelativeViewport.translated(Vector2(0.0f, -1.0f));
-    }
+    const auto newCenter = Vector2(relativeViewport_.center().x(),
+                                   1.0f - relativeViewport_.center().y());
+    const auto flippedRelativeViewport = Range2D::fromCenter(newCenter, relativeViewport_.size() / 2.0f);
 
     const auto viewport = calculateViewport(flippedRelativeViewport, applicationContext_.windowSize());
     GL::defaultFramebuffer.setViewport(viewport);
