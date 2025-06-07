@@ -67,7 +67,7 @@ private:
     GL::Mesh mesh_;
     Shaders::FlatGL2D shader_;
 
-    [[nodiscard]] Float depthAt(const Vector2 &windowPosition);
+    [[nodiscard]] Float depthAt(const Vector2 &windowPosition) const;
     [[nodiscard]] Vector3 unproject(const Vector2 &windowPosition, Float depth) const;
     [[nodiscard]] Range2D calculateRelativeViewport(const Range2Di &absoluteViewport, const Vector2i &windowSize);
     [[nodiscard]] Range2Di calculateViewport(const Range2D &relativeViewport, const Vector2i &windowSize);

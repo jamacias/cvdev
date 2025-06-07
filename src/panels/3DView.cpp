@@ -28,7 +28,7 @@ ThreeDView::ThreeDView(const Platform::Application &applicationContext, const st
     mesh_ = MeshTools::compile(Primitives::squareWireframe());
 }
 
-Float ThreeDView::depthAt(const Vector2 &windowPosition)
+Float ThreeDView::depthAt(const Vector2 &windowPosition) const
 {
     /* First scale the position from being relative to window size to being
        relative to framebuffer size as those two can be different on HiDPI
