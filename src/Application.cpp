@@ -53,8 +53,10 @@ CVDev::CVDev(const Arguments &arguments) : Platform::Application{arguments, NoCr
     viewportManager_->createNewViewport({1, 1}, ThreeDView::EBorder::BOTTOM);
 
     viewportManager_->createNewViewport({1, 1}, ThreeDView::EBorder::BOTTOM);
-
+    
     viewportManager_->createNewViewport({1, 600}, ThreeDView::EBorder::TOP);
+    
+    viewportManager_->createNewViewport({1, 600}, ThreeDView::EBorder::RIGHT);
 
     // viewportManager_->createNewViewport({1200, 1});
 }
