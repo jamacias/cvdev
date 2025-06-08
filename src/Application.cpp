@@ -46,6 +46,19 @@ CVDev::CVDev(const Arguments &arguments) : Platform::Application{arguments, NoCr
     grid_ = std::make_unique<Grid>(*scene_, drawables_);
 
     imagePreview_ = std::make_unique<ImagePreview>();
+
+    viewportManager_ = std::make_unique<ViewportManager>(*this, scene_);
+    viewportManager_->createNewViewport({1, 1}, ThreeDView::EBorder::LEFT);
+
+    viewportManager_->createNewViewport({1, 1}, ThreeDView::EBorder::BOTTOM);
+
+    viewportManager_->createNewViewport({1, 1}, ThreeDView::EBorder::BOTTOM);
+    
+    viewportManager_->createNewViewport({1, 600}, ThreeDView::EBorder::TOP);
+    
+    viewportManager_->createNewViewport({1, 600}, ThreeDView::EBorder::RIGHT);
+
+    // viewportManager_->createNewViewport({1200, 1});
 }
 
 void CVDev::drawEvent()
@@ -59,15 +72,20 @@ void CVDev::drawEvent()
     else if(!ImGui::GetIO().WantTextInput && isTextInputActive())
         stopTextInput();
 
-    ImGui::Begin("Test");
+    const ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize;
+    ImGui::Begin("Test", nullptr, window_flags);
     ImGui::Text("Hello, world!");
+    const ImGuiIO& io = ImGui::GetIO();
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", static_cast<double>(1000.0f / io.Framerate), static_cast<double>(io.Framerate));
     ImGui::End();
 
-    threeDView1_->setViewport(Range2Di({0, 0}, {windowSize().x()/2, windowSize().y()}));
-    threeDView1_->draw(drawables_);
+    // threeDView1_->setViewport(Range2Di({0, 0}, {windowSize().x()/2, windowSize().y()}));
+    // threeDView1_->draw(drawables_);
 
-    threeDView_->setViewport(Range2Di({windowSize().x()/2, 0}, {windowSize()}));
-    threeDView_->draw(drawables_);
+    // threeDView_->setViewport(Range2Di({windowSize().x()/2, 0}, {windowSize()}));
+    // threeDView_->draw(drawables_);
+
+    viewportManager_->draw(drawables_);
 
     // imagePreview_->draw();
 
@@ -114,8 +132,9 @@ void CVDev::pointerPressEvent(PointerEvent &event)
     if (imgui_.handlePointerPressEvent(event))
         return;
 
-    threeDView1_->handlePointerPressEvent(event);
-    threeDView_->handlePointerPressEvent(event);
+    viewportManager_->handlePointerPressEvent(event);
+    // threeDView1_->handlePointerPressEvent(event);
+    // threeDView_->handlePointerPressEvent(event);
 }
 
 void CVDev::pointerReleaseEvent(PointerEvent &event)
@@ -123,8 +142,9 @@ void CVDev::pointerReleaseEvent(PointerEvent &event)
     if (imgui_.handlePointerReleaseEvent(event))
         return;
 
-    threeDView_->handlePointerReleaseEvent(event);
-    threeDView1_->handlePointerReleaseEvent(event);
+    viewportManager_->handlePointerReleaseEvent(event);
+    // threeDView_->handlePointerReleaseEvent(event);
+    // threeDView1_->handlePointerReleaseEvent(event);
 }
 
 void CVDev::pointerMoveEvent(PointerMoveEvent &event)
@@ -132,8 +152,9 @@ void CVDev::pointerMoveEvent(PointerMoveEvent &event)
     if (imgui_.handlePointerMoveEvent(event))
         return;
 
-    threeDView1_->handlePointerMoveEvent(event);
-    threeDView_->handlePointerMoveEvent(event);
+    viewportManager_->handlePointerMoveEvent(event);
+    // threeDView1_->handlePointerMoveEvent(event);
+    // threeDView_->handlePointerMoveEvent(event);
 }
 
 void CVDev::scrollEvent(ScrollEvent &event)
@@ -145,8 +166,9 @@ void CVDev::scrollEvent(ScrollEvent &event)
         return;
     }
 
-    threeDView1_->handleScrollEvent(event);
-    threeDView_->handleScrollEvent(event);
+    viewportManager_->handleScrollEvent(event);
+    // threeDView1_->handleScrollEvent(event);
+    // threeDView_->handleScrollEvent(event);
 }
 
 void CVDev::textInputEvent(TextInputEvent &event)
