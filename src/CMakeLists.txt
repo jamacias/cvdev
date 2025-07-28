@@ -18,6 +18,9 @@ set(PANELS_LIST
 set(VIEWPORTS_LIST
     viewports/ViewportManager.cpp)
 
+
+add_subdirectory(test)
+
 add_executable(Application Application.cpp
                            ${OBJECTS_LIST}
                            ${PANELS_LIST}

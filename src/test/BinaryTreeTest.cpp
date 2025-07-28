@@ -1,5 +1,6 @@
 #include <Corrade/TestSuite/Tester.h>
 #include "../structures/BinaryTree.h"
+#include <Corrade/Containers/Array.h>
 
 
 namespace {
@@ -23,61 +24,48 @@ BinaryTreeTest::BinaryTreeTest()
     addBenchmarks({&BinaryTreeTest::HelloBenchmark}, 100);
 }
 
+Node<int>* CreateSampleTree()
+{
+    return nullptr;
+}
+
 void BinaryTreeTest::NextNode()
 {
     using NodeType = Node<int>;
-    // BinaryTree bt;
-    // auto node = std::make_shared<NodeType>(1);
-    // auto n_base = std::make_shared<NodeType>(0, 
-    //     std::make_shared<NodeType>(1, 
-    //         std::make_shared<NodeType>(3), std::make_shared<NodeType>(4)), std::make_shared<NodeType>(2, 
-    //                                                                           std::make_shared<NodeType>(5,
-    //                                                                             std::make_shared<NodeType>(7), std::make_unique<NodeType>(8)), std::make_unique<NodeType>(6)));
+
+    /*
+    The example tree is represented as follows:
+          0
+        /   \
+       1     2
+      / \   / \
+     3   4 5   6
+          / \
+         7   8
+    */
+    // Change the iterationSequence if, the test tree has changed!
+    const auto iterationSequence = Containers::array<int>({3, 1, 4, 0, 7, 5, 8, 2, 6});
     auto n_base = new NodeType(0, 
         new NodeType(1, 
             new NodeType(3), new NodeType(4)), new NodeType(2, 
                                                  new NodeType(5,
                                                    new NodeType(7), new NodeType(8)), new NodeType(6)));
-    // auto n_base = new NodeType(0, new NodeType(1), new NodeType(2));
-    // n_base->left_->printPtrs();
-    // n_base->leftMost()->printPtrs();
-    // auto n_base = std::make_shared<NodeType>(0, std::move(node), std::make_unique<NodeType>(2));
-
-    // NodeType n_base(0, new NodeType(1), new NodeType(2, new NodeType(3), new NodeType(4)));
-
-    // auto n_base = std::make_shared<NodeType>(0);
-
-    // BinaryTree tree(1);
 
     CORRADE_VERIFY(n_base->isRoot());
     CORRADE_VERIFY(n_base->root()->isRoot());
 
-    // Debug{} << "Left most: " << n_base->leftMost().data;
-    // Debug{} << "Left most next: " << n_base->leftMost().next().data;
-    // Debug{} << "Left most next next: " << n_base->leftMost().next().next().data;
-    // Debug{} << "Left most next next next: " << n_base->leftMost().next().next().next().data;
-
     NodeType* current = n_base->leftMost();
-    // NodeType* current = n_base;
     Debug{} << "Start: " << current->data;
+    std::size_t counter = 0;
     while (current != nullptr)
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        CORRADE_VERIFY(current->data == iterationSequence[counter]);
+        // Debug{} << "current->root()->data: " << current->root()->data;
+        // CORRADE_VERIFY(current->root()->data == n_base->data); // the root of all nodes should be the same
         Debug{} << "Current: " << current->data;
         current = current->next();
+        ++counter;
     }
-    
-
-    // Debug{} << "First: " << n_base->first()->data();
-
-    // Debug{} << "Next: " << n_base->first()->next()->data();
-    // Debug{} << "Next next: " << n_base->first()->next()->next()->data();
-
-    double a = 5.0;
-    double b = 3.0;
-
-    CORRADE_VERIFY(a*b == b*a);
-    CORRADE_VERIFY(a/b != b/a);
 }
 
 void BinaryTreeTest::NextNode2()
