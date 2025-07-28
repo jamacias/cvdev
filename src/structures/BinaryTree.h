@@ -10,7 +10,8 @@ template <class T>
 class Node
 {
 public:
-    using NodeType = Node<T>;
+    using Type = T;
+    using NodeType = Node<Type>;
 
     Node(const T &data, NodeType *left = nullptr, NodeType *right = nullptr)
     {
@@ -33,9 +34,9 @@ public:
     constexpr NodeType* root()
     {
         NodeType* root = this;
-        while (parent_ != nullptr)
+        while (root->parent_ != nullptr)
         {
-            root = parent_;
+            root = parent_->root();
         }
 
         CORRADE_INTERNAL_ASSERT(root->isRoot());

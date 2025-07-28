@@ -60,8 +60,7 @@ void BinaryTreeTest::NextNode()
     while (current != nullptr)
     {
         CORRADE_VERIFY(current->data == iterationSequence[counter]);
-        // Debug{} << "current->root()->data: " << current->root()->data;
-        // CORRADE_VERIFY(current->root()->data == n_base->data); // the root of all nodes should be the same
+        CORRADE_VERIFY(current->root()->data == n_base->data); // the root of all nodes in the tree should be the same
         Debug{} << "Current: " << current->data;
         current = current->next();
         ++counter;
