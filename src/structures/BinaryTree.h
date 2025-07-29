@@ -11,9 +11,8 @@ class Node
 {
 public:
     using Type = T;
-    using NodeType = Node<Type>;
 
-    Node(const T &data, NodeType *left = nullptr, NodeType *right = nullptr)
+    Node(const T &data, Node<Type> *left = nullptr, Node<Type> *right = nullptr)
     {
         this->data = data;
         this->left_ = left;
@@ -23,17 +22,17 @@ public:
     }
 
     ~Node() = default;
-    Node(const NodeType &other) = delete;
-    Node(NodeType &&other) noexcept = default;
-    NodeType &operator=(const NodeType &other) = delete;
-    NodeType &operator=(NodeType &&other) noexcept = default;
+    Node(const Node<Type> &other) = delete;
+    Node(Node<Type> &&other) noexcept = default;
+    Node<Type> &operator=(const Node<Type> &other) = delete;
+    Node<Type> &operator=(Node<Type> &&other) noexcept = default;
 
     constexpr bool isRoot() const noexcept { return parent_ == nullptr; }
     constexpr bool isLeaf() const noexcept { return !left_ && !right_; }
 
-    constexpr NodeType* root()
+    constexpr Node<Type>* root()
     {
-        NodeType* root = this;
+        Node<Type>* root = this;
         while (root->parent_ != nullptr)
         {
             root = parent_->root();
@@ -44,9 +43,9 @@ public:
         return root;
     }
 
-    constexpr NodeType* leftMost()
+    constexpr Node<Type>* leftMost()
     {
-        NodeType* n = this;
+        Node<Type>* n = this;
         while (n->left_ != nullptr)
         {
             n = n->left_;
@@ -57,7 +56,7 @@ public:
         return n;
     }
 
-    constexpr NodeType* next()
+    constexpr Node<Type>* next()
     {
         if (right_ != nullptr)
         {
@@ -65,7 +64,7 @@ public:
         }
         else
         {
-            NodeType* n = this;
+            Node<Type>* n = this;
             while (n->parent_ != nullptr && n == n->parent_->right_)
             {
                 n = n->parent_;
@@ -83,14 +82,40 @@ public:
     }
 
 private:
-    NodeType* left_{nullptr};
-    NodeType* right_{nullptr};
-    NodeType* parent_{nullptr};
+    Node<Type>* left_{nullptr};
+    Node<Type>* right_{nullptr};
+    Node<Type>* parent_{nullptr};
 };
 
-// template<class NodeType>
+// template<class T>
 // class BinaryTree
 // {
+// public:
+//     using Type = T;
+//     explicit BinaryTree(const NodeType &root)
+//     : root_(root)
+//     {
+
+//     }
+
+//     const Node &first()
+//     {
+//         return root_.leftMost();
+//     }
+//     const Node &last() { }
+
+//     const Node* begin() { return nullptr; }
+//     const Node* end() { return nullptr; }
+
+//     // void find(const std::function<bool()>)
+//     // {
+//     //     // This can actually be done with begin() and end() and std::find_if
+//     // }
+
+//     void addChildren(const NodeType &left, const NodeType& right)
+//     {
+
+//     }
 // private:
 //     // struct Node
 //     // {
@@ -128,33 +153,6 @@ private:
 //     // };
 
 //     Node root_;
-
-// public:
-//     explicit BinaryTree(const NodeType &root)
-//     : root_(root)
-//     {
-
-//     }
-
-//     const Node &first()
-//     {
-//         return root_.leftMost();
-//     }
-
-//     const Node &last()
-//     {
-
-//     }
-
-//     // void find(const std::function<bool()>)
-//     // {
-//     //     // This can actually be done with begin() and end() and std::find_if
-//     // }
-
-//     void addChildren(const NodeType &left, const NodeType& right)
-//     {
-
-//     }
 // };
 
 #endif // STRUCTURES_BINARYTREE_H

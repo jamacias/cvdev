@@ -11,7 +11,7 @@ struct BinaryTreeTest : Corrade::TestSuite::Tester
 
     void NextNode();
 
-    void NextNode2();
+    void IsLeaf();
 
     void HelloBenchmark();
 };
@@ -19,15 +19,11 @@ struct BinaryTreeTest : Corrade::TestSuite::Tester
 BinaryTreeTest::BinaryTreeTest()
 {
     addTests({&BinaryTreeTest::NextNode});
-    addTests({&BinaryTreeTest::NextNode2});
+    addTests({&BinaryTreeTest::IsLeaf});
 
     addBenchmarks({&BinaryTreeTest::HelloBenchmark}, 100);
 }
 
-Node<int>* CreateSampleTree()
-{
-    return nullptr;
-}
 
 void BinaryTreeTest::NextNode()
 {
@@ -67,19 +63,26 @@ void BinaryTreeTest::NextNode()
     }
 }
 
-void BinaryTreeTest::NextNode2()
-{
-    // using NodeType = Node<int>;
+// TODO: addChildren() and test for construction with and without children
 
-    // NodeType root(0);
-    // CORRADE_VERIFY(root.leftMost().data == 0);
-    
-    // root.left = new NodeType();
-    // root.left->data = 1;
-    // Debug{} << root.leftMost().data;
-    // Debug{} << root.left->data;
-    // CORRADE_VERIFY(root.leftMost().data == root.left->data);
-    CORRADE_VERIFY(true);
+void BinaryTreeTest::IsLeaf()
+{
+    using NodeType = Node<int>;
+
+    auto base = new NodeType(0);
+    CORRADE_VERIFY(base->isLeaf() && base->isRoot());
+
+    // Children not yet linked to base, therefore they are also roots and leaves too
+    auto leftChild = new NodeType(1);
+    CORRADE_VERIFY(leftChild->isLeaf() && leftChild->isRoot());
+    auto rightChild = new NodeType(2);
+    CORRADE_VERIFY(rightChild->isLeaf() && rightChild->isRoot());
+
+    // Base is recreated with the children
+    base = new NodeType(0, leftChild, rightChild);
+    CORRADE_VERIFY(!base->isLeaf() && base->isRoot());
+    CORRADE_VERIFY(leftChild->isLeaf() && !leftChild->isRoot());
+    CORRADE_VERIFY(rightChild->isLeaf() && !rightChild->isRoot());
 }
 
 void BinaryTreeTest::HelloBenchmark()
