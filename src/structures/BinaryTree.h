@@ -182,7 +182,7 @@ public:
         }
     }
 
-    std::size_t size() const
+    constexpr std::size_t size() const
     {
         return size_;
     }
