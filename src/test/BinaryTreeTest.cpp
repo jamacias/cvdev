@@ -111,14 +111,17 @@ void BinaryTreeTest::ForEach()
 
     Debug{} << "--- Insert --- ";
     tree.insert(6, 9, 10);
+    Debug{} << "Size: " << tree.size();
     tree.forEach();
 
     Debug{} << "--- Remove --- ";
     tree.remove(6);
+    Debug{} << "Size: " << tree.size();
     tree.forEach();
 
     Debug{} << "--- Remove --- ";
     tree.remove(2);
+    Debug{} << "Size: " << tree.size();
     tree.forEach();
 
     CORRADE_VERIFY(true);

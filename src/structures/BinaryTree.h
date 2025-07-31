@@ -99,6 +99,7 @@ public:
     explicit BinaryTree(const Type &rootData)
     {
         root_ = std::make_shared<Node>(rootData);
+        size_++;
 
         /*
         The example tree is represented as follows:
@@ -177,7 +178,13 @@ public:
             } while (nextPtr != nullptr && nextPtr->isLeaf() && nextPtr == parentPtr);
 
             removeChildren(parentPtr->parent.lock());
+            size_ -= 2;
         }
+    }
+
+    std::size_t size() const
+    {
+        return size_;
     }
 
     // void divide(const Type &value);
@@ -219,6 +226,7 @@ private:
     };
 
     std::shared_ptr<Node> root_{nullptr};
+    std::size_t size_{0};
 
     std::shared_ptr<Node> leftMost(std::shared_ptr<Node> current)
     {
@@ -261,15 +269,30 @@ private:
         parent->right = std::make_shared<Node>(right);
         parent->right->parent = parent;
 
+        size_ += 2;
+
         parent->printPtrs();
         CORRADE_INTERNAL_ASSERT(!parent->isLeaf());
         CORRADE_INTERNAL_ASSERT(parent->left->parent.lock() == parent->right->parent.lock()); // TODO: may be done faster (https://stackoverflow.com/q/12301916)
+        CORRADE_INTERNAL_ASSERT(size_ % 2);
     }
 
     void removeChildren(const std::shared_ptr<Node>& parent)
     {
-        if (parent->left) parent->left = nullptr;
-        if (parent->right) parent->right = nullptr;
+        CORRADE_INTERNAL_ASSERT(parent);
+        CORRADE_INTERNAL_ASSERT(( parent->left &&  parent->right) ||
+                                (!parent->left && !parent->right));
+        if (parent->left)
+        {
+            parent->left = nullptr;
+            size_--;
+        }
+        if (parent->right)
+        {
+            parent->right = nullptr;
+            size_--;
+        }
+        CORRADE_INTERNAL_ASSERT(size_ % 2);
     }
 };
 
