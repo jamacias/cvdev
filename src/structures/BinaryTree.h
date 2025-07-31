@@ -130,8 +130,53 @@ public:
         std::shared_ptr<Node> current = leftMost(root_);
         while (current != nullptr)
         {
-            Utility::Debug{} << "current->data: " << current->data;
+            Utility::Debug{} << "current->data: " << current->data << "; owners: " << current.use_count();
             current = next(current);
+        }
+    }
+
+    std::shared_ptr<Node> find(const Type &data)
+    {
+        std::shared_ptr<Node> current = leftMost(root_);
+        while (current != nullptr)
+        {
+            // Utility::Debug{} << "current->data: " << current->data;
+            if (current->data == data)
+                return current;
+
+            current = next(current);
+        }
+
+        return nullptr;
+    }
+
+    void insert(const Type &parent, const Type &left, const Type &right)
+    {
+        if (const auto parentPtr = find(parent))
+        {
+            CORRADE_INTERNAL_ASSERT(parentPtr);
+            CORRADE_INTERNAL_ASSERT(parentPtr->data == parent);
+            CORRADE_ASSERT(parentPtr->isLeaf(), "BinaryTree::insert(): the parent cannot already have children", );
+            addChildren(parentPtr, left, right);
+        }
+    }
+
+    void remove(const Type &parent)
+    {
+        std::shared_ptr<Node> parentPtr{nullptr};
+        if (parentPtr = find(parent))
+        {
+            CORRADE_INTERNAL_ASSERT(parentPtr);
+            CORRADE_INTERNAL_ASSERT(parentPtr->data == parent);
+            std::shared_ptr<Node> nextPtr {nullptr};
+            do
+            {
+                std::shared_ptr<Node> current = leftMost(parentPtr)->parent.lock();
+                removeChildren(current);
+                nextPtr = next(current);
+            } while (nextPtr != nullptr && nextPtr->isLeaf() && nextPtr == parentPtr);
+
+            removeChildren(parentPtr->parent.lock());
         }
     }
 
@@ -141,7 +186,7 @@ public:
 private:
     struct Node
     {
-        explicit Node(const Type &data) : data(data){};
+        explicit Node(const Type &data) : data(data){}
         Type data;
         std::shared_ptr<Node> left{nullptr};
         std::shared_ptr<Node> right{nullptr};
@@ -219,6 +264,12 @@ private:
         parent->printPtrs();
         CORRADE_INTERNAL_ASSERT(!parent->isLeaf());
         CORRADE_INTERNAL_ASSERT(parent->left->parent.lock() == parent->right->parent.lock()); // TODO: may be done faster (https://stackoverflow.com/q/12301916)
+    }
+
+    void removeChildren(const std::shared_ptr<Node>& parent)
+    {
+        if (parent->left) parent->left = nullptr;
+        if (parent->right) parent->right = nullptr;
     }
 };
 
