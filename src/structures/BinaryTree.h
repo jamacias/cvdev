@@ -96,7 +96,7 @@ private:
     struct Node; // forward declaration
 public:
     using Type = int;
-    explicit BinaryTree(const Type &rootData)
+    constexpr explicit BinaryTree(const Type &rootData)
     {
         root_ = std::make_shared<Node>(rootData);
         size_++;
@@ -126,7 +126,7 @@ public:
     // const Node* begin() { return nullptr; }
     // const Node* end() { return nullptr; }
 
-    void forEach()
+    void forEach() const
     {
         std::shared_ptr<Node> current = leftMost(root_);
         while (current != nullptr)
@@ -136,7 +136,7 @@ public:
         }
     }
 
-    std::shared_ptr<Node> find(const Type &data)
+    std::shared_ptr<Node> find(const Type &data) const
     {
         std::shared_ptr<Node> current = leftMost(root_);
         while (current != nullptr)
@@ -193,7 +193,7 @@ public:
 private:
     struct Node
     {
-        explicit Node(const Type &data) : data(data){}
+        constexpr explicit Node(const Type &data) : data(data){}
         Type data;
         std::shared_ptr<Node> left{nullptr};
         std::shared_ptr<Node> right{nullptr};
@@ -201,7 +201,7 @@ private:
 
         bool isRoot() const { return parent.expired(); }
         bool isLeaf() const { return !left && !right; }
-        void printPtrs()
+        void printPtrs() const
         {
             Utility::Debug{} << "this = " << this << "; &left = " << left.get() << "; &right = " << right.get() << "; &parent_ = " << parent.lock().get() << "; data = " << data;
 
@@ -228,7 +228,7 @@ private:
     std::shared_ptr<Node> root_{nullptr};
     std::size_t size_{0};
 
-    std::shared_ptr<Node> leftMost(std::shared_ptr<Node> current)
+    std::shared_ptr<Node> leftMost(std::shared_ptr<Node> current) const
     {
         std::shared_ptr<Node> n =  current;
         while (n->left != nullptr)
@@ -241,7 +241,7 @@ private:
         return n;
     }
 
-    std::shared_ptr<Node> next(std::shared_ptr<Node> current)
+    std::shared_ptr<Node> next(std::shared_ptr<Node> current) const
     {
         CORRADE_INTERNAL_ASSERT(current != nullptr);
         if (current->right != nullptr)
