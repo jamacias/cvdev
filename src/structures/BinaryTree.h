@@ -2,6 +2,8 @@
 #define STRUCTURES_BINARYTREE_H
 
 #include <Corrade/Utility/Debug.h>
+#include <memory>
+#include <string>
 
 using namespace Corrade;
 
@@ -88,71 +90,136 @@ private:
 };
 
 // template<class T>
-// class BinaryTree
-// {
-// public:
-//     using Type = T;
-//     explicit BinaryTree(const NodeType &root)
-//     : root_(root)
-//     {
+class BinaryTree
+{
+private:
+    struct Node; // forward declaration
+public:
+    using Type = int;
+    explicit BinaryTree(const Type &rootData)
+    {
+        root_ = std::make_shared<Node>(rootData);
 
-//     }
+        /*
+        The example tree is represented as follows:
+              0
+            /   \
+           1     2
+          / \   / \
+         3   4 5   6
+              / \
+             7   8
+        */
+        addChildren(root_, 1, 2);
+        addChildren(root_->left, 3, 4);
+        addChildren(root_->right, 5, 6);
+        addChildren(root_->right->left, 7, 8);
+    }
 
-//     const Node &first()
-//     {
-//         return root_.leftMost();
-//     }
-//     const Node &last() { }
+    // const Node &first()
+    // {
+    //     return root_.leftMost();
+    // }
+    // const Node &last() { }
 
-//     const Node* begin() { return nullptr; }
-//     const Node* end() { return nullptr; }
+    // const Node* begin() { return nullptr; }
+    // const Node* end() { return nullptr; }
 
-//     // void find(const std::function<bool()>)
-//     // {
-//     //     // This can actually be done with begin() and end() and std::find_if
-//     // }
+    void forEach()
+    {
+        std::shared_ptr<Node> current = leftMost(root_);
+        while (current != nullptr)
+        {
+            Utility::Debug{} << "current->data: " << current->data;
+            current = next(current);
+        }
+    }
 
-//     void addChildren(const NodeType &left, const NodeType& right)
-//     {
+    // void divide(const Type &value);
+    // void merge(const Type &value);
 
-//     }
-// private:
-//     // struct Node
-//     // {
-//     //     NodeType data;
-//     //     Node* left   {nullptr};
-//     //     Node* right  {nullptr};
-//     //     Node* parent {nullptr};
+private:
+    struct Node
+    {
+        explicit Node(const Type &data) : data(data){};
+        Type data;
+        std::shared_ptr<Node> left{nullptr};
+        std::shared_ptr<Node> right{nullptr};
+        std::weak_ptr<Node> parent;
 
-//     //     const Node &leftMost()
-//     //     {
-//     //         Node &n = *this;
-//     //         while(n.left != nullptr)
-//     //         {
-//     //             n = n.left;
-//     //         }
+        bool isRoot() const { return parent.expired(); }
+        bool isLeaf() const { return !left && !right; }
+        void printPtrs()
+        {
+            Utility::Debug{} << "this = " << this << "; &left = " << left.get() << "; &right = " << right.get() << "; &parent_ = " << parent.lock().get() << "; data = " << data;
 
-//     //         return n;
-//     //     }
+            /*
+                 parent
+                   |
+                 data
+                 /   \
+              left  right
+            */
+            const auto printNodeIfValid = [](const Node* n)->const char*
+                {
+                    return (n ? std::to_string(n->data).c_str() : "null");
+                };
+            Utility::Debug{} << "  " << printNodeIfValid(parent.lock().get())
+                             << "\n   |\n  "
+                             << data
+                             << "\n  / \\\n"
+                             << printNodeIfValid(left.get()) << " " << printNodeIfValid(right.get())
+                             ;
+        }
+    };
 
-//     //     const Node &next()
-//     //     {
-//     //         if (right != nullptr)
-//     //         {
-//     //             return leftMost();
-//     //         }
-            
-//     //         Node &n = *this;
-//     //         while (n.parent != nullptr && n == n.parent->right)
-//     //         {
-//     //             n = n.parent;
-//     //         }
-            
-//     //         return n.parent;
-//     //     }
-//     // };
+    std::shared_ptr<Node> root_{nullptr};
 
-//     Node root_;
-// };
+    std::shared_ptr<Node> leftMost(std::shared_ptr<Node> current)
+    {
+        std::shared_ptr<Node> n =  current;
+        while (n->left != nullptr)
+        {
+            n = n->left;
+        }
+
+        CORRADE_INTERNAL_ASSERT(n->isLeaf());
+
+        return n;
+    }
+
+    std::shared_ptr<Node> next(std::shared_ptr<Node> current)
+    {
+        CORRADE_INTERNAL_ASSERT(current != nullptr);
+        if (current->right != nullptr)
+        {
+            return leftMost(current->right);
+        }
+
+        std::shared_ptr<Node> n = current->parent.lock();
+        while (n != nullptr && current == n->right)
+        {
+            current = n;
+            n = n->parent.lock();
+        }
+
+        return n;
+    }
+
+    void addChildren(const std::shared_ptr<Node>& parent, const Type left, const Type right)
+    {
+        CORRADE_INTERNAL_ASSERT(parent);
+        CORRADE_INTERNAL_ASSERT(parent->isLeaf());
+
+        parent->left = std::make_shared<Node>(left);
+        parent->left->parent = parent;
+        parent->right = std::make_shared<Node>(right);
+        parent->right->parent = parent;
+
+        parent->printPtrs();
+        CORRADE_INTERNAL_ASSERT(!parent->isLeaf());
+        CORRADE_INTERNAL_ASSERT(parent->left->parent.lock() == parent->right->parent.lock()); // TODO: may be done faster (https://stackoverflow.com/q/12301916)
+    }
+};
 
 #endif // STRUCTURES_BINARYTREE_H

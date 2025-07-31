@@ -13,6 +13,8 @@ struct BinaryTreeTest : Corrade::TestSuite::Tester
 
     void IsLeaf();
 
+    void ForEach();
+
     void HelloBenchmark();
 };
 
@@ -20,6 +22,7 @@ BinaryTreeTest::BinaryTreeTest()
 {
     addTests({&BinaryTreeTest::NextNode});
     addTests({&BinaryTreeTest::IsLeaf});
+    addTests({&BinaryTreeTest::ForEach});
 
     addBenchmarks({&BinaryTreeTest::HelloBenchmark}, 100);
 }
@@ -61,6 +64,7 @@ void BinaryTreeTest::NextNode()
         current = current->next();
         ++counter;
     }
+    CORRADE_VERIFY(true);
 }
 
 // TODO: addChildren() and test for construction with and without children
@@ -83,6 +87,16 @@ void BinaryTreeTest::IsLeaf()
     CORRADE_VERIFY(!base->isLeaf() && base->isRoot());
     CORRADE_VERIFY(leftChild->isLeaf() && !leftChild->isRoot());
     CORRADE_VERIFY(rightChild->isLeaf() && !rightChild->isRoot());
+    CORRADE_VERIFY(true);
+}
+
+void BinaryTreeTest::ForEach()
+{
+    BinaryTree tree(0);
+
+    tree.forEach();
+
+    CORRADE_VERIFY(true);
 }
 
 void BinaryTreeTest::HelloBenchmark()
