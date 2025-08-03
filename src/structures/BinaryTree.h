@@ -4,6 +4,7 @@
 #include <Corrade/Utility/Debug.h>
 #include <memory>
 #include <string>
+#include <functional>
 
 using namespace Corrade;
 
@@ -100,38 +101,58 @@ public:
     {
         root_ = std::make_shared<Node>(rootData);
         size_++;
-
-        /*
-        The example tree is represented as follows:
-              0
-            /   \
-           1     2
-          / \   / \
-         3   4 5   6
-              / \
-             7   8
-        */
-        addChildren(root_, 1, 2);
-        addChildren(root_->left, 3, 4);
-        addChildren(root_->right, 5, 6);
-        addChildren(root_->right->left, 7, 8);
     }
 
-    // const Node &first()
+    // constexpr const Node& first() const
     // {
-    //     return root_.leftMost();
+    //     return first();
     // }
-    // const Node &last() { }
+
+    // Node& first()
+    // {
+    //     return *leftMost(root_);
+    // }
+    
+    // constexpr const Node& last() const
+    // {
+    //     return last();
+    // }
+
+    // Node& last()
+    // {
+    //     return *rightMost(root_);
+    // }
+
+    // class Iterator
+    // {
+    // public:
+    //     constexpr Iterator(Node* node) : node_(node){}
+
+    //     constexpr Node& operator*() const
+    //     {
+    //         return *node_;
+    //     }
+
+    //     constexpr Node& operator++() const
+    //     {
+    //         next(node_);
+    //     }
+
+    // private:
+    //     Node* node_;
+    // };
 
     // const Node* begin() { return nullptr; }
     // const Node* end() { return nullptr; }
 
-    void forEach() const
+    void forEach(const std::function<void(Node&)>& f = nullptr) const
     {
         std::shared_ptr<Node> current = leftMost(root_);
         while (current != nullptr)
         {
-            Utility::Debug{} << "current->data: " << current->data << "; owners: " << current.use_count();
+            // Utility::Debug{} << "current->data: " << current->data << "; owners: " << current.use_count();
+            if (f)
+                f(*current);
             current = next(current);
         }
     }
@@ -191,6 +212,7 @@ public:
     // void merge(const Type &value);
 
 private:
+    // friend Iterator;
     struct Node
     {
         constexpr explicit Node(const Type &data) : data(data){}
@@ -234,6 +256,19 @@ private:
         while (n->left != nullptr)
         {
             n = n->left;
+        }
+
+        CORRADE_INTERNAL_ASSERT(n->isLeaf());
+
+        return n;
+    }
+
+    std::shared_ptr<Node> rightMost(std::shared_ptr<Node> current) const
+    {
+        std::shared_ptr<Node> n =  current;
+        while (n->right != nullptr)
+        {
+            n = n->right;
         }
 
         CORRADE_INTERNAL_ASSERT(n->isLeaf());

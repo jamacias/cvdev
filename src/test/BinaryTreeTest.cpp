@@ -104,25 +104,58 @@ void BinaryTreeTest::ForEach()
     */
 
     BinaryTree tree(0);
+    CORRADE_VERIFY(tree.size() == 1);
+    tree.insert(0, 1, 2);
+    CORRADE_VERIFY(tree.size() == 3);
+    tree.insert(1, 3, 4);
+    CORRADE_VERIFY(tree.size() == 5);
+    tree.insert(2, 5, 6);
+    CORRADE_VERIFY(tree.size() == 7);
+    tree.insert(5, 7, 8);
+    CORRADE_VERIFY(tree.size() == 9);
 
-    tree.forEach();
+    // tree.forEach([](auto& n){ Debug{} << n.data; });
+    const auto checkSequence = [](const BinaryTree &tree, const Containers::ArrayView<BinaryTree::Type> &sequence)
+    {
+        std::size_t index = 0;
+        tree.forEach([&](auto& n)
+        {
+            CORRADE_INTERNAL_ASSERT(n.data == sequence[index]);
+            ++index;
+        });
+    };
+    checkSequence(tree, Containers::array({3, 1, 4, 0, 7, 5, 8, 2, 6}));
+    
+    Debug{} << "--- Find --- ";
+    CORRADE_VERIFY(tree.find(5)->data == 5);
+    CORRADE_VERIFY(tree.find(1232425) == nullptr);
 
-    Debug{} << tree.find(5)->data;
+    // Debug{} << "--- First --- ";
+    // Debug{} << tree.first().data;
+
+    // Debug{} << "--- Last --- ";
+    // Debug{} << tree.last().data;
 
     Debug{} << "--- Insert --- ";
     tree.insert(6, 9, 10);
-    Debug{} << "Size: " << tree.size();
-    tree.forEach();
+    CORRADE_VERIFY(tree.size() == 11);
+    checkSequence(tree, Containers::array({3, 1, 4, 0, 7, 5, 8, 2, 9, 6, 10}));
 
     Debug{} << "--- Remove --- ";
     tree.remove(6);
-    Debug{} << "Size: " << tree.size();
-    tree.forEach();
+    CORRADE_VERIFY(tree.size() == 5);
+    checkSequence(tree, Containers::array({3, 1, 4, 0, 2}));
 
     Debug{} << "--- Remove --- ";
     tree.remove(2);
-    Debug{} << "Size: " << tree.size();
-    tree.forEach();
+    CORRADE_VERIFY(tree.size() == 1);
+    checkSequence(tree, Containers::array({0}));
+
+    // TODO: do not allow removing the root
+    // Debug{} << "--- Remove --- ";
+    // tree.remove(0);
+    // Debug{} << "Size: " << tree.size();
+    // tree.forEach([](auto& n){ Debug{} << n.data; });
 
     CORRADE_VERIFY(true);
 }
