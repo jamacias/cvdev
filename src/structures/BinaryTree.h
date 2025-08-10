@@ -140,29 +140,29 @@ public:
     //     return *rightMost(root_);
     // }
 
-    class Iterator
+    class ConstIterator
     {
     public:
-        explicit Iterator(Node* node) : node_(node){}
+        constexpr ConstIterator(const Node* node) : node_(node){}
 
-        Node& operator*() const
+        constexpr const Node& operator*() const
         {
             return *node_;
         }
 
-        bool operator!=(const Iterator& other) const
+        constexpr bool operator!=(const ConstIterator& other) const
         {
             return node_ != other.node_;
         }
 
-        Iterator& operator++()
+        ConstIterator& operator++()
         {
             node_ = next(node_);
             return *this;
         }
 
     private:
-        Node* node_;
+        const Node* node_;
     };
 
     const Node* begin() { return leftMost(root_); }
@@ -179,21 +179,6 @@ public:
             current = next(current);
         }
     }
-
-    // std::shared_ptr<Node> find(const Type &data) const
-    // {
-    //     std::shared_ptr<Node> current = leftMost(root_);
-    //     while (current != nullptr)
-    //     {
-    //         // Utility::Debug{} << "current->data: " << current->data;
-    //         if (current->data == data)
-    //             return current;
-
-    //         current = next(current);
-    //     }
-
-    //     return nullptr;
-    // }
 
     void insert(Node* parent, Node* left, Node* right)
     {
@@ -214,7 +199,6 @@ public:
         size_ += 2;
     }
 
-    // TODO: maybe pass in one child and remove the one that is not pointing to the same one.
     void remove(Node* child)
     {
         CORRADE_INTERNAL_ASSERT(child);
@@ -240,21 +224,6 @@ public:
             nextPtr->right_ = nullptr;
 
         size_ -= 2;
-        // if (parentPtr = find(parent))
-        // {
-        //     CORRADE_INTERNAL_ASSERT(parentPtr);
-        //     CORRADE_INTERNAL_ASSERT(parentPtr->data == parent);
-        //     std::shared_ptr<Node> nextPtr {nullptr};
-        //     do
-        //     {
-        //         std::shared_ptr<Node> current = leftMost(parentPtr)->parent.lock();
-        //         removeChildren(current);
-        //         nextPtr = next(current);
-        //     } while (nextPtr != nullptr && nextPtr->isLeaf() && nextPtr == parentPtr);
-
-        //     removeChildren(parentPtr->parent.lock());
-        //     size_ -= 2;
-        // }
     }
 
     constexpr std::size_t size() const
@@ -262,17 +231,11 @@ public:
         return size_;
     }
 
-    // void divide(const Type &value);
-    // void merge(const Type &value);
-
 private:
-    // friend Iterator;
-    
-
     Node* root_{nullptr};
     std::size_t size_{0};
 
-    static Node* leftMost(Node* current) // const
+    static Node* leftMost(Node* const current)
     {
         Node* n =  current;
         while (n->left_ != nullptr)
@@ -285,7 +248,7 @@ private:
         return n;
     }
 
-    static Node* next(Node* current) //const
+    static Node* next(const Node* current)
     {
         CORRADE_INTERNAL_ASSERT(current != nullptr);
         if (current->right_ != nullptr)
@@ -302,42 +265,6 @@ private:
 
         return n;
     }
-
-    // void addChildren(const std::shared_ptr<Node>& parent, const Type left, const Type right)
-    // {
-    //     CORRADE_INTERNAL_ASSERT(parent);
-    //     CORRADE_INTERNAL_ASSERT(parent->isLeaf());
-
-    //     parent->left = std::make_shared<Node>(left);
-    //     parent->left->parent = parent;
-    //     parent->right = std::make_shared<Node>(right);
-    //     parent->right->parent = parent;
-
-    //     size_ += 2;
-
-    //     parent->printPtrs();
-    //     CORRADE_INTERNAL_ASSERT(!parent->isLeaf());
-    //     CORRADE_INTERNAL_ASSERT(parent->left->parent.lock() == parent->right->parent.lock()); // TODO: may be done faster (https://stackoverflow.com/q/12301916)
-    //     CORRADE_INTERNAL_ASSERT(size_ % 2);
-    // }
-
-    // void removeChildren(const std::shared_ptr<Node>& parent)
-    // {
-    //     CORRADE_INTERNAL_ASSERT(parent);
-    //     CORRADE_INTERNAL_ASSERT(( parent->left &&  parent->right) ||
-    //                             (!parent->left && !parent->right));
-    //     if (parent->left)
-    //     {
-    //         parent->left = nullptr;
-    //         size_--;
-    //     }
-    //     if (parent->right)
-    //     {
-    //         parent->right = nullptr;
-    //         size_--;
-    //     }
-    //     CORRADE_INTERNAL_ASSERT(size_ % 2);
-    // }
 };
 
 #endif // STRUCTURES_BINARYTREE_H

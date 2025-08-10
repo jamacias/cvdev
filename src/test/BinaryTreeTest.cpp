@@ -152,7 +152,7 @@ void BinaryTreeTest::ForEach()
     // CORRADE_VERIFY(tree.size() == 9);
 
     // Debug{} << "--- Iterator --- ";
-    // for (auto &node : tree)
+    // for (auto& node : tree)
     // {
     //     auto n = static_cast<TreeNode&>(node);
     //     n.printPtrs();
