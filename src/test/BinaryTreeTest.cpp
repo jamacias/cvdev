@@ -142,8 +142,10 @@ void BinaryTreeTest::ForEach()
     TreeNode node2(2);
     tree.insert(&root, &node1, &node2);
     CORRADE_VERIFY(tree.size() == 3);
-    // tree.insert(1, 3, 4);
-    // CORRADE_VERIFY(tree.size() == 5);
+    TreeNode node3(3);
+    TreeNode node4(4);
+    tree.insert(&node1, &node3, &node4);
+    CORRADE_VERIFY(tree.size() == 5);
     // tree.insert(2, 5, 6);
     // CORRADE_VERIFY(tree.size() == 7);
     // tree.insert(5, 7, 8);
@@ -167,7 +169,7 @@ void BinaryTreeTest::ForEach()
         });
     };
     // checkSequence(tree, Containers::array({3, 1, 4, 0, 7, 5, 8, 2, 6}));
-    checkSequence(tree, Containers::array({1, 0, 2}));
+    checkSequence(tree, Containers::array({3, 1, 4, 0, 2}));
 
     Debug{} << "--- Remove --- ";
     tree.remove(&node1);

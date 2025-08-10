@@ -100,6 +100,10 @@ public:
         friend BinaryTree;
     public:
         constexpr explicit Node(){}
+        // Node(const Node&) = delete;
+        // Node(Node&& other){};
+        // Node& operator=(const Node&) = delete;
+        // Node& operator=(Node&& other){};
     
         bool isRoot() const { return parent_; }
         bool isLeaf() const { return !left_ && !right_; }
@@ -225,9 +229,15 @@ public:
             if (current->right_)
                 current->right_ = nullptr;
 
+            size_ -= 2;
+
             nextPtr = next(current);
         } while (nextPtr != nullptr && nextPtr->isLeaf() && nextPtr == child->parent_);
 
+        if (nextPtr->left_)
+                nextPtr->left_ = nullptr;
+        if (nextPtr->right_)
+            nextPtr->right_ = nullptr;
 
         size_ -= 2;
         // if (parentPtr = find(parent))
