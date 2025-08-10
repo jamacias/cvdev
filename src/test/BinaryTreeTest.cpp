@@ -115,7 +115,7 @@ void BinaryTreeTest::ForEach()
     CORRADE_VERIFY(tree.size() == 9);
 
     // tree.forEach([](auto& n){ Debug{} << n.data; });
-    const auto checkSequence = [](const BinaryTree &tree, const Containers::ArrayView<BinaryTree::Type> &sequence)
+    const auto checkSequence = [](/*const*/ BinaryTree &tree, const Containers::ArrayView<BinaryTree::Type> &sequence)
     {
         std::size_t index = 0;
         tree.forEach([&](auto& n)

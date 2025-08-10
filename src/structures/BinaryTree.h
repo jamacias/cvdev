@@ -97,30 +97,15 @@ private:
     struct Node; // forward declaration
 public:
     using Type = int;
-    constexpr explicit BinaryTree(const Type &rootData)
-    {
-        root_ = std::make_shared<Node>(rootData);
-        size_++;
-    }
+    constexpr explicit BinaryTree() noexcept
+    : root_(nullptr)
+    , size_(0)
+    {}
+    // constexpr explicit BinaryTree(const Type &rootData)
+    // : root_(rootData)
+    // , size_(1)
+    // {
 
-    // constexpr const Node& first() const
-    // {
-    //     return first();
-    // }
-
-    // Node& first()
-    // {
-    //     return *leftMost(root_);
-    // }
-    
-    // constexpr const Node& last() const
-    // {
-    //     return last();
-    // }
-
-    // Node& last()
-    // {
-    //     return *rightMost(root_);
     // }
 
     // class Iterator
@@ -145,62 +130,72 @@ public:
     // const Node* begin() { return nullptr; }
     // const Node* end() { return nullptr; }
 
-    void forEach(const std::function<void(Node&)>& f = nullptr) const
+    // void forEach(const std::function<void(Node&)>& f = nullptr) //const
+    // {
+    //     Node* current = leftMost(&root_);
+    //     while (current != nullptr)
+    //     {
+    //         // Utility::Debug{} << "current->data: " << current->data << "; owners: " << current.use_count();
+    //         if (f)
+    //             f(*current);
+    //         current = next(current);
+    //     }
+    // }
+
+    // Node* find(const Type &data) //const
+    // {
+    //     Node* current = leftMost(&root_);
+    //     while (current != nullptr)
+    //     {
+    //         // Utility::Debug{} << "current->data: " << current->data;
+    //         if (current->data == data)
+    //             return current;
+
+    //         current = next(current);
+    //     }
+
+    //     return nullptr;
+    // }
+
+    void insert(Node* left, Node* right, Node* parent)
     {
-        std::shared_ptr<Node> current = leftMost(root_);
-        while (current != nullptr)
-        {
-            // Utility::Debug{} << "current->data: " << current->data << "; owners: " << current.use_count();
-            if (f)
-                f(*current);
-            current = next(current);
-        }
+        CORRADE_INTERNAL_ASSERT(left != nullptr);
+        CORRADE_INTERNAL_ASSERT(right != nullptr);
+        CORRADE_INTERNAL_ASSERT(parent != nullptr);
+
+        CORRADE_ASSERT(!left->tree || !right->tree, "BinaryTree::insert(): cannot insert a node that already belongs elsewhere", );
+
+        left->tree = static_cast<decltype(left->tree)>(this);
+        right->tree = static_cast<decltype(right->tree)>(this);
+
+        parent->left = left;
+        left->parent = parent;
+        
+        parent->right = right;
+        right->parent = parent;
     }
 
-    std::shared_ptr<Node> find(const Type &data) const
+    void remove(Node* parent)
     {
-        std::shared_ptr<Node> current = leftMost(root_);
-        while (current != nullptr)
-        {
-            // Utility::Debug{} << "current->data: " << current->data;
-            if (current->data == data)
-                return current;
+        CORRADE_INTERNAL_ASSERT(parent);
 
-            current = next(current);
-        }
+        child->parent
+        
+        // if ((parentPtr = find(parent)))
+        // {
+        //     CORRADE_INTERNAL_ASSERT(parentPtr);
+        //     CORRADE_INTERNAL_ASSERT(parentPtr->data == parent);
+        //     Node* nextPtr {nullptr};
+        //     do
+        //     {
+        //         Node* current = leftMost(parentPtr)->parent;
+        //         removeChildren(current);
+        //         nextPtr = next(current);
+        //     } while (nextPtr != nullptr && nextPtr->isLeaf() && nextPtr == parentPtr);
 
-        return nullptr;
-    }
-
-    void insert(const Type &parent, const Type &left, const Type &right)
-    {
-        if (const auto parentPtr = find(parent))
-        {
-            CORRADE_INTERNAL_ASSERT(parentPtr);
-            CORRADE_INTERNAL_ASSERT(parentPtr->data == parent);
-            CORRADE_ASSERT(parentPtr->isLeaf(), "BinaryTree::insert(): the parent cannot already have children", );
-            addChildren(parentPtr, left, right);
-        }
-    }
-
-    void remove(const Type &parent)
-    {
-        std::shared_ptr<Node> parentPtr{nullptr};
-        if (parentPtr = find(parent))
-        {
-            CORRADE_INTERNAL_ASSERT(parentPtr);
-            CORRADE_INTERNAL_ASSERT(parentPtr->data == parent);
-            std::shared_ptr<Node> nextPtr {nullptr};
-            do
-            {
-                std::shared_ptr<Node> current = leftMost(parentPtr)->parent.lock();
-                removeChildren(current);
-                nextPtr = next(current);
-            } while (nextPtr != nullptr && nextPtr->isLeaf() && nextPtr == parentPtr);
-
-            removeChildren(parentPtr->parent.lock());
-            size_ -= 2;
-        }
+        //     removeChildren(parentPtr->parent);
+        //     size_ -= 2;
+        // }
     }
 
     constexpr std::size_t size() const
@@ -215,17 +210,31 @@ private:
     // friend Iterator;
     struct Node
     {
-        constexpr explicit Node(const Type &data) : data(data){}
+        // constexpr explicit Node(const Type &data) : data(data){}
+        constexpr explicit Node(const Type &data) noexcept
+        : data(data)
+        , left(nullptr)
+        , right(nullptr)
+        , parent(nullptr)
+        , tree(nullptr)
+        {}
+        
+        ~Node()
+        {
+            if (left) delete left;
+            if (right) delete right;
+        }
         Type data;
-        std::shared_ptr<Node> left{nullptr};
-        std::shared_ptr<Node> right{nullptr};
-        std::weak_ptr<Node> parent;
+        Node* left{nullptr};
+        Node* right{nullptr};
+        Node* parent{nullptr};
+        BinaryTree* tree{nullptr};
 
-        bool isRoot() const { return parent.expired(); }
+        bool isRoot() const { return parent; }
         bool isLeaf() const { return !left && !right; }
         void printPtrs() const
         {
-            Utility::Debug{} << "this = " << this << "; &left = " << left.get() << "; &right = " << right.get() << "; &parent_ = " << parent.lock().get() << "; data = " << data;
+            Utility::Debug{} << "this = " << this << "; &left = " << left << "; &right = " << right << "; &parent_ = " << parent << "; data = " << data;
 
             /*
                  parent
@@ -238,21 +247,21 @@ private:
                 {
                     return (n ? std::to_string(n->data).c_str() : "null");
                 };
-            Utility::Debug{} << "  " << printNodeIfValid(parent.lock().get())
+            Utility::Debug{} << "  " << printNodeIfValid(parent)
                              << "\n   |\n  "
                              << data
                              << "\n  / \\\n"
-                             << printNodeIfValid(left.get()) << " " << printNodeIfValid(right.get())
+                             << printNodeIfValid(left) << " " << printNodeIfValid(right)
                              ;
         }
     };
 
-    std::shared_ptr<Node> root_{nullptr};
+    Node* root_;
     std::size_t size_{0};
 
-    std::shared_ptr<Node> leftMost(std::shared_ptr<Node> current) const
+    Node* leftMost(Node* current) const
     {
-        std::shared_ptr<Node> n =  current;
+        Node* n =  current;
         while (n->left != nullptr)
         {
             n = n->left;
@@ -263,20 +272,7 @@ private:
         return n;
     }
 
-    std::shared_ptr<Node> rightMost(std::shared_ptr<Node> current) const
-    {
-        std::shared_ptr<Node> n =  current;
-        while (n->right != nullptr)
-        {
-            n = n->right;
-        }
-
-        CORRADE_INTERNAL_ASSERT(n->isLeaf());
-
-        return n;
-    }
-
-    std::shared_ptr<Node> next(std::shared_ptr<Node> current) const
+    Node* next(Node* current) const
     {
         CORRADE_INTERNAL_ASSERT(current != nullptr);
         if (current->right != nullptr)
@@ -284,35 +280,35 @@ private:
             return leftMost(current->right);
         }
 
-        std::shared_ptr<Node> n = current->parent.lock();
+        Node* n = current->parent;
         while (n != nullptr && current == n->right)
         {
             current = n;
-            n = n->parent.lock();
+            n = n->parent;
         }
 
         return n;
     }
 
-    void addChildren(const std::shared_ptr<Node>& parent, const Type left, const Type right)
+    void addChildren(Node* const parent, const Type left, const Type right)
     {
         CORRADE_INTERNAL_ASSERT(parent);
         CORRADE_INTERNAL_ASSERT(parent->isLeaf());
 
-        parent->left = std::make_shared<Node>(left);
+        parent->left = new Node(left);
         parent->left->parent = parent;
-        parent->right = std::make_shared<Node>(right);
+        parent->right = new Node(right);
         parent->right->parent = parent;
 
         size_ += 2;
 
         parent->printPtrs();
         CORRADE_INTERNAL_ASSERT(!parent->isLeaf());
-        CORRADE_INTERNAL_ASSERT(parent->left->parent.lock() == parent->right->parent.lock()); // TODO: may be done faster (https://stackoverflow.com/q/12301916)
+        CORRADE_INTERNAL_ASSERT(parent->left->parent == parent->right->parent); // TODO: may be done faster (https://stackoverflow.com/q/12301916)
         CORRADE_INTERNAL_ASSERT(size_ % 2);
     }
 
-    void removeChildren(const std::shared_ptr<Node>& parent)
+    void removeChildren(Node* const parent)
     {
         CORRADE_INTERNAL_ASSERT(parent);
         CORRADE_INTERNAL_ASSERT(( parent->left &&  parent->right) ||
