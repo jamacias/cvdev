@@ -1,3 +1,4 @@
+#include <string>
 #include <Corrade/TestSuite/Tester.h>
 #include "../structures/BinaryTree.h"
 #include <Corrade/Containers/Array.h>
