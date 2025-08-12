@@ -146,6 +146,35 @@ public:
     //     return *rightMost(root_);
     // }
 
+    class Iterator
+    {
+    public:
+        constexpr Iterator(Node* node) : node_(node){}
+
+        constexpr Node& operator*() const
+        {
+            return *node_;
+        }
+
+        constexpr bool operator!=(const Iterator& other) const
+        {
+            return node_ != other.node_;
+        }
+
+        Iterator& operator++()
+        {
+            node_ = next(node_);
+            return *this;
+        }
+
+    private:
+        Node* node_;
+    };
+
+    Iterator begin() { return Iterator(leftMost(root_)); }
+    Iterator end() { return Iterator(nullptr); }
+
+
     class ConstIterator
     {
     public:
@@ -171,8 +200,8 @@ public:
         const Node* node_;
     };
 
-    const ConstIterator begin() { return ConstIterator(leftMost(root_)); }
-    const ConstIterator end() { return ConstIterator(nullptr); }
+    const ConstIterator begin() const { return ConstIterator(leftMost(root_)); }
+    const ConstIterator end() const { return ConstIterator(nullptr); }
 
     void forEach(const std::function<void(Node&)>& f = nullptr) const
     {
@@ -254,7 +283,6 @@ private:
         return n;
     }
 
-public:
     static Node* next(const Node* current)
     {
         CORRADE_INTERNAL_ASSERT(current != nullptr);

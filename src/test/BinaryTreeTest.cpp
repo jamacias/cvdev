@@ -152,22 +152,27 @@ void BinaryTreeTest::ForEach()
     // CORRADE_VERIFY(tree.size() == 9);
 
     Debug{} << "--- Iterator --- ";
-    for (auto& node : tree)
+    // for (auto& node : tree)
     // for (auto it = tree.begin(), end = tree.end(); it != end; ++it)
-    {
-        Debug{} << node.isLeaf();
-        static_cast<const TreeNode&>(node).printPtrs();
-    }
+    // {
+    //     *it;
+    //     Debug{} << node.isLeaf();
+    //     static_cast<const TreeNode&>(node).printPtrs();
+    // }
 
-    // tree.forEach([](auto& n){ Debug{} << n.data; });
+    std::for_each(tree.begin(), tree.end(), [](const auto& node)
+        {
+            static_cast<const TreeNode&>(node).printPtrs();
+        });
+
     const auto checkSequence = [](const BinaryTree &tree, const Containers::ArrayView<BinaryTree::Type> &sequence)
     {
         std::size_t index = 0;
-        tree.forEach([&](auto& n)
-        {
-            CORRADE_INTERNAL_ASSERT(static_cast<TreeNode&>(n).data == sequence[index]);
-            ++index;
-        });
+        std::for_each(tree.begin(), tree.end(), [&](const auto& node)
+            {
+                CORRADE_INTERNAL_ASSERT(static_cast<const TreeNode&>(node).data == sequence[index]);
+                ++index;
+            });
     };
     // checkSequence(tree, Containers::array({3, 1, 4, 0, 7, 5, 8, 2, 6}));
     checkSequence(tree, Containers::array({3, 1, 4, 0, 2}));
