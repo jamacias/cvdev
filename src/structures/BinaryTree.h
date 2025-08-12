@@ -203,19 +203,7 @@ public:
     constexpr ConstIterator begin() const { return ConstIterator(leftMost(root_)); }
     constexpr ConstIterator end() const { return ConstIterator(nullptr); }
 
-    void forEach(const std::function<void(Node&)>& f = nullptr) const
-    {
-        Node* current = leftMost(root_);
-        while (current != nullptr)
-        {
-            // Utility::Debug{} << "current->data: " << current->data << "; owners: " << current.use_count();
-            if (f)
-                f(*current);
-            current = next(current);
-        }
-    }
-
-    void insert(Node* parent, Node* left, Node* right)
+    constexpr void insert(Node* parent, Node* left, Node* right)
     {
         CORRADE_INTERNAL_ASSERT(parent && left && right);
         CORRADE_ASSERT(parent->isLeaf(), "BinaryTree::insert(): the parent cannot already have children", );
@@ -234,7 +222,7 @@ public:
         size_ += 2;
     }
 
-    void remove(Node* child)
+    constexpr void remove(Node* child)
     {
         CORRADE_INTERNAL_ASSERT(child);
 
