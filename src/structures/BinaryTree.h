@@ -111,8 +111,8 @@ public:
         Node& operator=(Node&& other) = delete;//{};
         virtual ~Node(){};
     
-        bool isRoot() const { return parent_; }
-        bool isLeaf() const { return !left_ && !right_; }
+        constexpr bool isRoot() const { return parent_; }
+        constexpr bool isLeaf() const { return !left_ && !right_; }
     protected:
         Node* left_{nullptr};
         Node* right_{nullptr};
@@ -200,8 +200,8 @@ public:
         const Node* node_;
     };
 
-    const ConstIterator begin() const { return ConstIterator(leftMost(root_)); }
-    const ConstIterator end() const { return ConstIterator(nullptr); }
+    constexpr ConstIterator begin() const { return ConstIterator(leftMost(root_)); }
+    constexpr ConstIterator end() const { return ConstIterator(nullptr); }
 
     void forEach(const std::function<void(Node&)>& f = nullptr) const
     {
@@ -270,7 +270,7 @@ private:
     Node* root_{nullptr};
     std::size_t size_{0};
 
-    static Node* leftMost(Node* const current)
+    static constexpr Node* leftMost(Node* const current)
     {
         Node* n =  current;
         while (n->left_ != nullptr)
@@ -283,7 +283,7 @@ private:
         return n;
     }
 
-    static Node* next(const Node* current)
+    static constexpr Node* next(const Node* current)
     {
         CORRADE_INTERNAL_ASSERT(current != nullptr);
         if (current->right_ != nullptr)
