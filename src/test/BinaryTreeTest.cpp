@@ -151,12 +151,13 @@ void BinaryTreeTest::ForEach()
     // tree.insert(5, 7, 8);
     // CORRADE_VERIFY(tree.size() == 9);
 
-    // Debug{} << "--- Iterator --- ";
-    // for (auto& node : tree)
-    // {
-    //     auto n = static_cast<TreeNode&>(node);
-    //     n.printPtrs();
-    // }
+    Debug{} << "--- Iterator --- ";
+    for (auto& node : tree)
+    // for (auto it = tree.begin(), end = tree.end(); it != end; ++it)
+    {
+        Debug{} << node.isLeaf();
+        static_cast<const TreeNode&>(node).printPtrs();
+    }
 
     // tree.forEach([](auto& n){ Debug{} << n.data; });
     const auto checkSequence = [](const BinaryTree &tree, const Containers::ArrayView<BinaryTree::Type> &sequence)

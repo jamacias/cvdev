@@ -95,15 +95,21 @@ class BinaryTree
 {
 public:
     using Type = int;
+    // template<class Derived>
     class Node
     {
         friend BinaryTree;
     public:
-        constexpr explicit Node(){}
-        // Node(const Node&) = delete;
-        // Node(Node&& other){};
-        // Node& operator=(const Node&) = delete;
-        // Node& operator=(Node&& other){};
+        constexpr explicit Node()
+        : left_(nullptr)
+        , right_(nullptr)
+        , parent_(nullptr)
+        {}
+        Node(const Node&) = delete;
+        Node(Node&& other) = delete; //{};
+        Node& operator=(const Node&) = delete;
+        Node& operator=(Node&& other) = delete;//{};
+        virtual ~Node(){};
     
         bool isRoot() const { return parent_; }
         bool isLeaf() const { return !left_ && !right_; }
@@ -165,8 +171,8 @@ public:
         const Node* node_;
     };
 
-    const Node* begin() { return leftMost(root_); }
-    const Node* end() { return nullptr; }
+    const ConstIterator begin() { return ConstIterator(leftMost(root_)); }
+    const ConstIterator end() { return ConstIterator(nullptr); }
 
     void forEach(const std::function<void(Node&)>& f = nullptr) const
     {
@@ -248,6 +254,7 @@ private:
         return n;
     }
 
+public:
     static Node* next(const Node* current)
     {
         CORRADE_INTERNAL_ASSERT(current != nullptr);
