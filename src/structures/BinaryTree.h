@@ -135,14 +135,16 @@ public:
         size_ += 2;
     }
 
-    constexpr void remove(Node* child)
+    constexpr void remove(Node* node)
     {
-        CORRADE_INTERNAL_ASSERT(child);
+        // CORRADE_INTERNAL_ASSERT(node);
+
+        if (!node) return;
 
         Node* nextPtr {nullptr};
         do
         {
-            Node* current = leftMost(child->parent_)->parent_;
+            Node* current = leftMost(node->parent_)->parent_;
 
             if (current->left_)
                 current->left_ = nullptr;
@@ -152,12 +154,9 @@ public:
             size_ -= 2;
 
             nextPtr = next(current);
-        } while (nextPtr != nullptr && nextPtr->isLeaf() && nextPtr == child->parent_);
+        } while (nextPtr != nullptr && nextPtr->isLeaf() && nextPtr != node->parent_);
 
-        if (nextPtr->left_)
-                nextPtr->left_ = nullptr;
-        if (nextPtr->right_)
-            nextPtr->right_ = nullptr;
+        remove(node->parent_->right_);
 
         size_ -= 2;
     }

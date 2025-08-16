@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <string>
 #include <Corrade/TestSuite/Tester.h>
 #include "../structures/BinaryTree.h"
@@ -147,10 +148,14 @@ void BinaryTreeTest::ForEach()
     TreeNode node4(4);
     tree.insert(&node1, &node3, &node4);
     CORRADE_VERIFY(tree.size() == 5);
-    // tree.insert(2, 5, 6);
-    // CORRADE_VERIFY(tree.size() == 7);
-    // tree.insert(5, 7, 8);
-    // CORRADE_VERIFY(tree.size() == 9);
+    TreeNode node5(5);
+    TreeNode node6(6);
+    tree.insert(&node2, &node5, &node6);
+    CORRADE_VERIFY(tree.size() == 7);
+    TreeNode node7(7);
+    TreeNode node8(8);
+    tree.insert(&node5, &node7, &node8);
+    CORRADE_VERIFY(tree.size() == 9);
 
     Debug{} << "--- Iterator --- ";
     // for (auto& node : tree)
@@ -161,10 +166,13 @@ void BinaryTreeTest::ForEach()
     //     static_cast<const TreeNode&>(node).printPtrs();
     // }
 
-    std::for_each(tree.begin(), tree.end(), [](const auto& node)
-        {
-            static_cast<const TreeNode&>(node).printPtrs();
-        });
+    const auto printTree =[](const BinaryTree &tree)
+    {
+        std::for_each(tree.begin(), tree.end(), [](const auto& node)
+            {
+                static_cast<const TreeNode&>(node).printPtrs();
+            });
+    };
 
     const auto checkSequence = [](const BinaryTree &tree, const Containers::ArrayView<BinaryTree::Type> &sequence)
     {
@@ -175,11 +183,12 @@ void BinaryTreeTest::ForEach()
                 ++index;
             });
     };
-    // checkSequence(tree, Containers::array({3, 1, 4, 0, 7, 5, 8, 2, 6}));
-    checkSequence(tree, Containers::array({3, 1, 4, 0, 2}));
+    checkSequence(tree, Containers::array({3, 1, 4, 0, 7, 5, 8, 2, 6}));
+    // checkSequence(tree, Containers::array({3, 1, 4, 0, 2}));
 
     Debug{} << "--- Remove --- ";
     tree.remove(&node1);
+    printTree(tree);
     CORRADE_VERIFY(tree.size() == 1);
     checkSequence(tree, Containers::array({0}));
 
@@ -217,6 +226,8 @@ void BinaryTreeTest::ForEach()
 
     CORRADE_VERIFY(true);
 }
+
+// TODO: test size by comparing the length of the iterator and getSize();
 
 void BinaryTreeTest::HelloBenchmark()
 {
