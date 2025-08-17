@@ -11,20 +11,20 @@ struct BinaryTreeTest : Corrade::TestSuite::Tester
 {
     explicit BinaryTreeTest();
 
-    void NextNode();
+    void Size();
 
     void IsLeaf();
 
-    void ForEach();
+    void Iterator();
 
     void HelloBenchmark();
 };
 
 BinaryTreeTest::BinaryTreeTest()
 {
-    addTests({&BinaryTreeTest::NextNode});
+    addTests({&BinaryTreeTest::Size});
     addTests({&BinaryTreeTest::IsLeaf});
-    addTests({&BinaryTreeTest::ForEach});
+    addTests({&BinaryTreeTest::Iterator});
 
     addBenchmarks({&BinaryTreeTest::HelloBenchmark}, 100);
 }
@@ -60,11 +60,47 @@ public:
     }
 };
 
-
-void BinaryTreeTest::NextNode()
+const auto printTree =[](const BinaryTree &tree)->void
 {
-    // using NodeType = Node<int>;
+    std::for_each(tree.begin(), tree.end(), [](const auto& node)
+        {
+            static_cast<const TreeNode&>(node).printPtrs();
+        });
+};
 
+constexpr auto checkSequence = [](const BinaryTree &tree, const Containers::ArrayView<BinaryTree::Type> &sequence)->void
+{
+    std::size_t index = 0;
+    std::for_each(tree.begin(), tree.end(), [&](const auto& node)
+        {
+            CORRADE_VERIFY(static_cast<const TreeNode&>(node).data == sequence[index]);
+            ++index;
+        });
+};
+
+constexpr auto contains = [](const BinaryTree& tree, const TreeNode& treeNode)->bool
+{
+    for (const auto& node : tree)
+    {
+        if (&node == &treeNode)
+            return true;
+    }
+    return false;
+};
+
+constexpr auto countNodes = [](const BinaryTree& tree)->std::size_t
+{
+    std::size_t size = 0;
+    for ([[maybe_unused]] const auto& node : tree)
+    {
+        ++size;
+    }
+    return size;
+};
+
+
+void BinaryTreeTest::Size()
+{
     /*
     The example tree is represented as follows:
           0
@@ -75,32 +111,43 @@ void BinaryTreeTest::NextNode()
           / \
          7   8
     */
-    // Change the iterationSequence if, the test tree has changed!
-    // const auto iterationSequence = Containers::array<int>({3, 1, 4, 0, 7, 5, 8, 2, 6});
-    // auto n_base = new NodeType(0, 
-    //     new NodeType(1, 
-    //         new NodeType(3), new NodeType(4)), new NodeType(2, 
-    //                                              new NodeType(5,
-    //                                                new NodeType(7), new NodeType(8)), new NodeType(6)));
 
-    // CORRADE_VERIFY(n_base->isRoot());
-    // CORRADE_VERIFY(n_base->root()->isRoot());
+    TreeNode root(0);
 
-    // NodeType* current = n_base->leftMost();
-    // Debug{} << "Start: " << current->data;
-    // std::size_t counter = 0;
-    // while (current != nullptr)
-    // {
-    //     CORRADE_VERIFY(current->data == iterationSequence[counter]);
-    //     CORRADE_VERIFY(current->root()->data == n_base->data); // the root of all nodes in the tree should be the same
-    //     Debug{} << "Current: " << current->data;
-    //     current = current->next();
-    //     ++counter;
-    // }
-    CORRADE_VERIFY(true);
+    BinaryTree tree(&root);
+    CORRADE_VERIFY(tree.size() == 1);
+    CORRADE_VERIFY(tree.size() == countNodes(tree));
+    TreeNode node1(1);
+    TreeNode node2(2);
+    tree.insert(&root, &node1, &node2);
+    CORRADE_VERIFY(tree.size() == 3);
+    CORRADE_VERIFY(tree.size() == countNodes(tree));
+    TreeNode node3(3);
+    TreeNode node4(4);
+    tree.insert(&node1, &node3, &node4);
+    CORRADE_VERIFY(tree.size() == 5);
+    CORRADE_VERIFY(tree.size() == countNodes(tree));
+    TreeNode node5(5);
+    TreeNode node6(6);
+    tree.insert(&node2, &node5, &node6);
+    CORRADE_VERIFY(tree.size() == 7);
+    CORRADE_VERIFY(tree.size() == countNodes(tree));
+    TreeNode node7(7);
+    TreeNode node8(8);
+    tree.insert(&node5, &node7, &node8);
+    CORRADE_VERIFY(tree.size() == 9);
+    CORRADE_VERIFY(tree.size() == countNodes(tree));
+
+    // Delete one leaf, should delete the sibling too
+    tree.remove(&node8);
+    CORRADE_VERIFY(tree.size() == 7);
+    CORRADE_VERIFY(!contains(tree, node8));
+
+    // Delete a node that is not a leaf, should delete the sibling and all its children
+    tree.remove(&node1);
+    CORRADE_VERIFY(tree.size() == 1);
+    CORRADE_VERIFY(!contains(tree, node1));
 }
-
-// TODO: addChildren() and test for construction with and without children
 
 void BinaryTreeTest::IsLeaf()
 {
@@ -123,7 +170,7 @@ void BinaryTreeTest::IsLeaf()
     CORRADE_VERIFY(true);
 }
 
-void BinaryTreeTest::ForEach()
+void BinaryTreeTest::Iterator()
 {
     /*
     The example tree is represented as follows:
@@ -139,23 +186,18 @@ void BinaryTreeTest::ForEach()
     TreeNode root(0);
 
     BinaryTree tree(&root);
-    CORRADE_VERIFY(tree.size() == 1);
     TreeNode node1(1);
     TreeNode node2(2);
     tree.insert(&root, &node1, &node2);
-    CORRADE_VERIFY(tree.size() == 3);
     TreeNode node3(3);
     TreeNode node4(4);
     tree.insert(&node1, &node3, &node4);
-    CORRADE_VERIFY(tree.size() == 5);
     TreeNode node5(5);
     TreeNode node6(6);
     tree.insert(&node2, &node5, &node6);
-    CORRADE_VERIFY(tree.size() == 7);
     TreeNode node7(7);
     TreeNode node8(8);
     tree.insert(&node5, &node7, &node8);
-    CORRADE_VERIFY(tree.size() == 9);
 
     Debug{} << "--- Iterator --- ";
     // for (auto& node : tree)
@@ -166,68 +208,8 @@ void BinaryTreeTest::ForEach()
     //     static_cast<const TreeNode&>(node).printPtrs();
     // }
 
-    const auto printTree =[](const BinaryTree &tree)
-    {
-        std::for_each(tree.begin(), tree.end(), [](const auto& node)
-            {
-                static_cast<const TreeNode&>(node).printPtrs();
-            });
-    };
-
-    const auto checkSequence = [](const BinaryTree &tree, const Containers::ArrayView<BinaryTree::Type> &sequence)
-    {
-        std::size_t index = 0;
-        std::for_each(tree.begin(), tree.end(), [&](const auto& node)
-            {
-                CORRADE_INTERNAL_ASSERT(static_cast<const TreeNode&>(node).data == sequence[index]);
-                ++index;
-            });
-    };
     checkSequence(tree, Containers::array({3, 1, 4, 0, 7, 5, 8, 2, 6}));
-    // checkSequence(tree, Containers::array({3, 1, 4, 0, 2}));
-
-    Debug{} << "--- Remove --- ";
-    tree.remove(&node1);
-    printTree(tree);
-    CORRADE_VERIFY(tree.size() == 1);
-    checkSequence(tree, Containers::array({0}));
-
-    
-    // Debug{} << "--- Find --- ";
-    // CORRADE_VERIFY(tree.find(5)->data == 5);
-    // CORRADE_VERIFY(tree.find(1232425) == nullptr);
-
-    // Debug{} << "--- First --- ";
-    // Debug{} << tree.first().data;
-
-    // Debug{} << "--- Last --- ";
-    // Debug{} << tree.last().data;
-
-    // Debug{} << "--- Insert --- ";
-    // tree.insert(6, 9, 10);
-    // CORRADE_VERIFY(tree.size() == 11);
-    // checkSequence(tree, Containers::array({3, 1, 4, 0, 7, 5, 8, 2, 9, 6, 10}));
-
-    // Debug{} << "--- Remove --- ";
-    // tree.remove(6);
-    // CORRADE_VERIFY(tree.size() == 5);
-    // checkSequence(tree, Containers::array({3, 1, 4, 0, 2}));
-
-    // Debug{} << "--- Remove --- ";
-    // tree.remove(2);
-    // CORRADE_VERIFY(tree.size() == 1);
-    // checkSequence(tree, Containers::array({0}));
-
-    // TODO: do not allow removing the root
-    // Debug{} << "--- Remove --- ";
-    // tree.remove(0);
-    // Debug{} << "Size: " << tree.size();
-    // tree.forEach([](auto& n){ Debug{} << n.data; });
-
-    CORRADE_VERIFY(true);
 }
-
-// TODO: test size by comparing the length of the iterator and getSize();
 
 void BinaryTreeTest::HelloBenchmark()
 {

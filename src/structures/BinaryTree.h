@@ -3,6 +3,8 @@
 
 using namespace Corrade;
 
+#include <Corrade/Utility/Debug.h>
+
 // template<class T>
 class BinaryTree
 {
@@ -22,7 +24,7 @@ public:
         Node(Node&& other) = delete; //{};
         Node& operator=(const Node&) = delete;
         Node& operator=(Node&& other) = delete;//{};
-        virtual ~Node(){};
+        virtual ~Node() = default; //{ Utility::Debug{} << "Destroy"; };
     
         constexpr bool isRoot() const { return parent_; }
         constexpr bool isLeaf() const { return !left_ && !right_; }
@@ -137,8 +139,6 @@ public:
 
     constexpr void remove(Node* node)
     {
-        // CORRADE_INTERNAL_ASSERT(node);
-
         if (!node) return;
 
         Node* nextPtr {nullptr};
@@ -158,7 +158,10 @@ public:
 
         remove(node->parent_->right_);
 
-        size_ -= 2;
+        if (!node->isLeaf())
+        {
+            size_ -= 2;
+        }
     }
 
     constexpr std::size_t size() const
