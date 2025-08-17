@@ -13,8 +13,6 @@ struct BinaryTreeTest : Corrade::TestSuite::Tester
 
     void Size();
 
-    void IsLeaf();
-
     void Iterator();
 
     void HelloBenchmark();
@@ -23,7 +21,6 @@ struct BinaryTreeTest : Corrade::TestSuite::Tester
 BinaryTreeTest::BinaryTreeTest()
 {
     addTests({&BinaryTreeTest::Size});
-    addTests({&BinaryTreeTest::IsLeaf});
     addTests({&BinaryTreeTest::Iterator});
 
     addBenchmarks({&BinaryTreeTest::HelloBenchmark}, 100);
@@ -149,27 +146,6 @@ void BinaryTreeTest::Size()
     CORRADE_VERIFY(!contains(tree, node1));
 }
 
-void BinaryTreeTest::IsLeaf()
-{
-    // using NodeType = Node<int>;
-
-    // auto base = new NodeType(0);
-    // CORRADE_VERIFY(base->isLeaf() && base->isRoot());
-
-    // // Children not yet linked to base, therefore they are also roots and leaves too
-    // auto leftChild = new NodeType(1);
-    // CORRADE_VERIFY(leftChild->isLeaf() && leftChild->isRoot());
-    // auto rightChild = new NodeType(2);
-    // CORRADE_VERIFY(rightChild->isLeaf() && rightChild->isRoot());
-
-    // // Base is recreated with the children
-    // base = new NodeType(0, leftChild, rightChild);
-    // CORRADE_VERIFY(!base->isLeaf() && base->isRoot());
-    // CORRADE_VERIFY(leftChild->isLeaf() && !leftChild->isRoot());
-    // CORRADE_VERIFY(rightChild->isLeaf() && !rightChild->isRoot());
-    CORRADE_VERIFY(true);
-}
-
 void BinaryTreeTest::Iterator()
 {
     /*
@@ -198,15 +174,6 @@ void BinaryTreeTest::Iterator()
     TreeNode node7(7);
     TreeNode node8(8);
     tree.insert(&node5, &node7, &node8);
-
-    Debug{} << "--- Iterator --- ";
-    // for (auto& node : tree)
-    // for (auto it = tree.begin(), end = tree.end(); it != end; ++it)
-    // {
-    //     *it;
-    //     Debug{} << node.isLeaf();
-    //     static_cast<const TreeNode&>(node).printPtrs();
-    // }
 
     checkSequence(tree, Containers::array({3, 1, 4, 0, 7, 5, 8, 2, 6}));
 }
