@@ -13,7 +13,7 @@ struct BinaryTreeTest : Corrade::TestSuite::Tester
 
     void Size();
 
-    void Iterator();
+    void Iteration();
 
     void HelloBenchmark();
 };
@@ -21,7 +21,7 @@ struct BinaryTreeTest : Corrade::TestSuite::Tester
 BinaryTreeTest::BinaryTreeTest()
 {
     addTests({&BinaryTreeTest::Size});
-    addTests({&BinaryTreeTest::Iterator});
+    addTests({&BinaryTreeTest::Iteration});
 
     addBenchmarks({&BinaryTreeTest::HelloBenchmark}, 100);
 }
@@ -29,7 +29,8 @@ BinaryTreeTest::BinaryTreeTest()
 class TreeNode : public BinaryTree::Node
 {
 public:
-    int data;
+    using Type = int;
+    Type data;
     explicit TreeNode(int data)
     : data(data) {}
 
@@ -65,7 +66,7 @@ const auto printTree =[](const BinaryTree &tree)->void
         });
 };
 
-constexpr auto checkSequence = [](const BinaryTree &tree, const Containers::ArrayView<BinaryTree::Type> &sequence)->void
+constexpr auto checkSequence = [](const BinaryTree &tree, const Containers::ArrayView<TreeNode::Type> &sequence)->void
 {
     std::size_t index = 0;
     std::for_each(tree.begin(), tree.end(), [&](const auto& node)
@@ -146,7 +147,7 @@ void BinaryTreeTest::Size()
     CORRADE_VERIFY(!contains(tree, node1));
 }
 
-void BinaryTreeTest::Iterator()
+void BinaryTreeTest::Iteration()
 {
     /*
     The example tree is represented as follows:

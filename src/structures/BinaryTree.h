@@ -9,7 +9,6 @@ using namespace Corrade;
 class BinaryTree
 {
 public:
-    using Type = int;
     // template<class Derived>
     class Node
     {
