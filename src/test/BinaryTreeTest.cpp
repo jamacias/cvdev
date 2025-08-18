@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <string>
 #include <Corrade/TestSuite/Tester.h>
 #include "../structures/BinaryTree.h"
