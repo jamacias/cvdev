@@ -12,7 +12,6 @@ struct BinaryTreeTest : Corrade::TestSuite::Tester
     explicit BinaryTreeTest();
 
     void Size();
-
     void Iteration();
 
     void HelloBenchmark();
@@ -66,14 +65,20 @@ const auto printTree =[](const BinaryTree &tree)->void
         });
 };
 
-constexpr auto checkSequence = [](const BinaryTree &tree, const Containers::ArrayView<TreeNode::Type> &sequence)->void
+constexpr auto checkSequence = [](const BinaryTree &tree, const Containers::ArrayView<TreeNode::Type> &sequence)->bool
 {
     std::size_t index = 0;
+    bool ok = true;
     std::for_each(tree.begin(), tree.end(), [&](const auto& node)
         {
-            CORRADE_VERIFY(static_cast<const TreeNode&>(node).data == sequence[index]);
+            if (static_cast<const TreeNode&>(node).data != sequence[index])
+            {
+                ok = false;
+            }
             ++index;
         });
+
+    return ok;
 };
 
 constexpr auto contains = [](const BinaryTree& tree, const TreeNode& treeNode)->bool
@@ -161,22 +166,28 @@ void BinaryTreeTest::Iteration()
     */
 
     TreeNode root(0);
-
     BinaryTree tree(&root);
+    CORRADE_VERIFY(checkSequence(tree, Containers::array({0})));
+
     TreeNode node1(1);
     TreeNode node2(2);
     tree.insert(&root, &node1, &node2);
+    CORRADE_VERIFY(checkSequence(tree, Containers::array({1, 0, 2})));
+
     TreeNode node3(3);
     TreeNode node4(4);
     tree.insert(&node1, &node3, &node4);
+    CORRADE_VERIFY(checkSequence(tree, Containers::array({3, 1, 4, 0, 2})));
+
     TreeNode node5(5);
     TreeNode node6(6);
     tree.insert(&node2, &node5, &node6);
+    CORRADE_VERIFY(checkSequence(tree, Containers::array({3, 1, 4, 0, 5, 2, 6})));
+
     TreeNode node7(7);
     TreeNode node8(8);
     tree.insert(&node5, &node7, &node8);
-
-    checkSequence(tree, Containers::array({3, 1, 4, 0, 7, 5, 8, 2, 6}));
+    CORRADE_VERIFY(checkSequence(tree, Containers::array({3, 1, 4, 0, 7, 5, 8, 2, 6})));
 }
 
 void BinaryTreeTest::HelloBenchmark()
