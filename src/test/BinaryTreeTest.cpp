@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <string>
 #include <Corrade/TestSuite/Tester.h>
 #include "../structures/BinaryTree.h"
@@ -24,7 +25,10 @@ BinaryTreeTest::BinaryTreeTest()
     addBenchmarks({&BinaryTreeTest::HelloBenchmark}, 100);
 }
 
-class TreeNode : public BinaryTree::Node
+// class TreeNode;
+// using BinaryTree = BinaryTree<TreeNode>;
+
+class TreeNode : public Node<TreeNode>
 {
 public:
     using Type = int;
@@ -43,9 +47,9 @@ public:
              /   \
           left  right
         */
-        const auto printNodeIfValid = [](Node* const n)->const char*
+        const auto printNodeIfValid = [](TreeNode* const n)->const char*
             {
-                return (n ? std::to_string(static_cast<TreeNode*>(n)->data).c_str() : "null");
+                return (n ? std::to_string(n->data).c_str() : "null");
             };
         Utility::Debug{} << "  " << printNodeIfValid(parent_)
                          << "\n   |\n  "
@@ -56,21 +60,24 @@ public:
     }
 };
 
-const auto printTree =[](const BinaryTree &tree)->void
+// using BinaryTree = BinaryTree<TreeNode>;
+// typedef BinaryTree<TreeNode> BinaryTree;
+
+const auto printTree =[](const BinaryTree<TreeNode> &tree)->void
 {
     std::for_each(tree.begin(), tree.end(), [](const auto& node)
         {
-            static_cast<const TreeNode&>(node).printPtrs();
+            node.printPtrs();
         });
 };
 
-constexpr auto checkSequence = [](const BinaryTree &tree, const Containers::ArrayView<TreeNode::Type> &sequence)->bool
+constexpr auto checkSequence = [](const BinaryTree<TreeNode> &tree, const Containers::ArrayView<TreeNode::Type> &sequence)->bool
 {
     std::size_t index = 0;
     bool ok = true;
     std::for_each(tree.begin(), tree.end(), [&](const auto& node)
         {
-            if (static_cast<const TreeNode&>(node).data != sequence[index])
+            if (node.data != sequence[index])
             {
                 ok = false;
             }
@@ -80,7 +87,7 @@ constexpr auto checkSequence = [](const BinaryTree &tree, const Containers::Arra
     return ok;
 };
 
-constexpr auto contains = [](const BinaryTree& tree, const TreeNode& treeNode)->bool
+constexpr auto contains = [](const BinaryTree<TreeNode>& tree, const TreeNode& treeNode)->bool
 {
     for (const auto& node : tree)
     {
@@ -90,7 +97,7 @@ constexpr auto contains = [](const BinaryTree& tree, const TreeNode& treeNode)->
     return false;
 };
 
-constexpr auto countNodes = [](const BinaryTree& tree)->std::size_t
+constexpr auto countNodes = [](const BinaryTree<TreeNode>& tree)->std::size_t
 {
     std::size_t size = 0;
     for ([[maybe_unused]] const auto& node : tree)

@@ -5,36 +5,11 @@ using namespace Corrade;
 
 #include <Corrade/Utility/Debug.h>
 
-// template<class T>
+template<class T>
 class BinaryTree
 {
 public:
-    // template<class Derived>
-    class Node
-    {
-        friend BinaryTree;
-    public:
-        constexpr explicit Node()
-        : left_(nullptr)
-        , right_(nullptr)
-        , parent_(nullptr)
-        {}
-        Node(const Node&) = delete;
-        Node(Node&& other) = delete; //{};
-        Node& operator=(const Node&) = delete;
-        Node& operator=(Node&& other) = delete;//{};
-        virtual ~Node() = default; //{ Utility::Debug{} << "Destroy"; };
-    
-        constexpr bool isRoot() const { return parent_; }
-        constexpr bool isLeaf() const { return !left_ && !right_; }
-    protected:
-        Node* left_{nullptr};
-        Node* right_{nullptr};
-        Node* parent_{nullptr};
-
-    };
-public:
-    constexpr explicit BinaryTree(Node* root)
+    constexpr explicit BinaryTree(T* root)
     : root_(root)
     {
         size_++;
@@ -63,9 +38,9 @@ public:
     class Iterator
     {
     public:
-        constexpr Iterator(Node* node) : node_(node){}
+        constexpr Iterator(T* node) : node_(node){}
 
-        constexpr Node& operator*() const
+        constexpr T& operator*() const
         {
             return *node_;
         }
@@ -82,7 +57,7 @@ public:
         }
 
     private:
-        Node* node_;
+        T* node_;
     };
 
     Iterator begin() { return Iterator(leftMost(root_)); }
@@ -92,9 +67,9 @@ public:
     class ConstIterator
     {
     public:
-        constexpr ConstIterator(const Node* node) : node_(node){}
+        constexpr ConstIterator(const T* node) : node_(node){}
 
-        constexpr const Node& operator*() const
+        constexpr const T& operator*() const
         {
             return *node_;
         }
@@ -111,13 +86,13 @@ public:
         }
 
     private:
-        const Node* node_;
+        const T* node_;
     };
 
     constexpr ConstIterator begin() const { return ConstIterator(leftMost(root_)); }
     constexpr ConstIterator end() const { return ConstIterator(nullptr); }
 
-    constexpr void insert(Node* parent, Node* left, Node* right)
+    constexpr void insert(T* parent, T* left, T* right)
     {
         CORRADE_INTERNAL_ASSERT(parent && left && right);
         CORRADE_ASSERT(parent->isLeaf(), "BinaryTree::insert(): the parent cannot already have children", );
@@ -136,14 +111,14 @@ public:
         size_ += 2;
     }
 
-    constexpr void remove(Node* node)
+    constexpr void remove(T* node)
     {
         if (!node) return;
 
-        Node* nextPtr {nullptr};
+        T* nextPtr {nullptr};
         do
         {
-            Node* current = leftMost(node->parent_)->parent_;
+            T* current = leftMost(node->parent_)->parent_;
 
             if (current->left_)
                 current->left_ = nullptr;
@@ -169,12 +144,12 @@ public:
     }
 
 private:
-    Node* root_{nullptr};
+    T* root_{nullptr};
     std::size_t size_{0};
 
-    static constexpr Node* leftMost(Node* const current)
+    static constexpr T* leftMost(T* const current)
     {
-        Node* n =  current;
+        T* n =  current;
         while (n->left_ != nullptr)
         {
             n = n->left_;
@@ -185,7 +160,7 @@ private:
         return n;
     }
 
-    static constexpr Node* next(const Node* current)
+    static constexpr T* next(const T* current)
     {
         CORRADE_INTERNAL_ASSERT(current != nullptr);
         if (current->right_ != nullptr)
@@ -193,7 +168,7 @@ private:
             return leftMost(current->right_);
         }
 
-        Node* n = current->parent_;
+        T* n = current->parent_;
         while (n != nullptr && current == n->right_)
         {
             current = n;
@@ -202,6 +177,31 @@ private:
 
         return n;
     }
+};
+
+
+template<class Derived>
+class Node
+{
+    friend BinaryTree<Derived>;
+public:
+    constexpr explicit Node()
+    : left_(nullptr)
+    , right_(nullptr)
+    , parent_(nullptr)
+    {}
+    Node(const Node<Derived>&) = delete;
+    Node<Derived>(Node<Derived>&& other) = delete; //{};
+    Node<Derived>& operator=(const Node<Derived>&) = delete;
+    Node<Derived>& operator=(Node<Derived>&& other) = delete;//{};
+    virtual ~Node() = default; //{ Utility::Debug{} << "Destroy"; };
+    
+    constexpr bool isRoot() const { return parent_; }
+    constexpr bool isLeaf() const { return !left_ && !right_; }
+protected:
+    Derived* left_{nullptr};
+    Derived* right_{nullptr};
+    Derived* parent_{nullptr};
 };
 
 #endif // STRUCTURES_BINARYTREE_H
