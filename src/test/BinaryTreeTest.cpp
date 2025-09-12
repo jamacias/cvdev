@@ -5,7 +5,7 @@
 #include <Corrade/Containers/Array.h>
 
 
-namespace {
+namespace Test { namespace {
 
 struct BinaryTreeTest : Corrade::TestSuite::Tester
 {
@@ -25,8 +25,6 @@ BinaryTreeTest::BinaryTreeTest()
     addBenchmarks({&BinaryTreeTest::HelloBenchmark}, 100);
 }
 
-// class TreeNode;
-// using BinaryTree = BinaryTree<TreeNode>;
 
 class TreeNode : public Node<TreeNode>
 {
@@ -60,10 +58,9 @@ public:
     }
 };
 
-// using BinaryTree = BinaryTree<TreeNode>;
-// typedef BinaryTree<TreeNode> BinaryTree;
+using Tree = BinaryTree<TreeNode>;
 
-const auto printTree =[](const BinaryTree<TreeNode> &tree)->void
+const auto printTree =[](const Tree &tree)->void
 {
     std::for_each(tree.begin(), tree.end(), [](const auto& node)
         {
@@ -71,7 +68,7 @@ const auto printTree =[](const BinaryTree<TreeNode> &tree)->void
         });
 };
 
-constexpr auto checkSequence = [](const BinaryTree<TreeNode> &tree, const Containers::ArrayView<TreeNode::Type> &sequence)->bool
+constexpr auto checkSequence = [](const Tree &tree, const Containers::ArrayView<TreeNode::Type> &sequence)->bool
 {
     std::size_t index = 0;
     bool ok = true;
@@ -87,7 +84,7 @@ constexpr auto checkSequence = [](const BinaryTree<TreeNode> &tree, const Contai
     return ok;
 };
 
-constexpr auto contains = [](const BinaryTree<TreeNode>& tree, const TreeNode& treeNode)->bool
+constexpr auto contains = [](const Tree& tree, const TreeNode& treeNode)->bool
 {
     for (const auto& node : tree)
     {
@@ -97,7 +94,7 @@ constexpr auto contains = [](const BinaryTree<TreeNode>& tree, const TreeNode& t
     return false;
 };
 
-constexpr auto countNodes = [](const BinaryTree<TreeNode>& tree)->std::size_t
+constexpr auto countNodes = [](const Tree& tree)->std::size_t
 {
     std::size_t size = 0;
     for ([[maybe_unused]] const auto& node : tree)
@@ -123,7 +120,7 @@ void BinaryTreeTest::Size()
 
     TreeNode root(0);
 
-    BinaryTree tree(&root);
+    Tree tree(&root);
     CORRADE_VERIFY(tree.size() == 1);
     CORRADE_VERIFY(tree.size() == countNodes(tree));
     TreeNode node1(1);
@@ -172,7 +169,7 @@ void BinaryTreeTest::Iteration()
     */
 
     TreeNode root(0);
-    BinaryTree tree(&root);
+    Tree tree(&root);
     CORRADE_VERIFY(checkSequence(tree, Containers::array({0})));
 
     TreeNode node1(1);
@@ -206,6 +203,7 @@ void BinaryTreeTest::HelloBenchmark()
     CORRADE_VERIFY(a); // to avoid the benchmark loop being optimized out
 }
 
+} // Test
 } // namespace
 
-CORRADE_TEST_MAIN(BinaryTreeTest)
+CORRADE_TEST_MAIN(Test::BinaryTreeTest)
