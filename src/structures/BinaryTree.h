@@ -3,8 +3,6 @@
 
 using namespace Corrade;
 
-#include <Corrade/Utility/Debug.h>
-
 template<class T>
 class BinaryTree
 {
@@ -14,26 +12,6 @@ public:
     {
         size_++;
     }
-
-    // constexpr const Node& first() const
-    // {
-    //     return first();
-    // }
-
-    // Node& first()
-    // {
-    //     return *leftMost(root_);
-    // }
-    
-    // constexpr const Node& last() const
-    // {
-    //     return last();
-    // }
-
-    // Node& last()
-    // {
-    //     return *rightMost(root_);
-    // }
 
     class Iterator
     {
@@ -191,10 +169,10 @@ public:
     , parent_(nullptr)
     {}
     Node(const Node<Derived>&) = delete;
-    Node<Derived>(Node<Derived>&& other) = delete; //{};
+    Node<Derived>(Node<Derived>&& other) = delete;
     Node<Derived>& operator=(const Node<Derived>&) = delete;
-    Node<Derived>& operator=(Node<Derived>&& other) = delete;//{};
-    virtual ~Node() = default; //{ Utility::Debug{} << "Destroy"; };
+    Node<Derived>& operator=(Node<Derived>&& other) = delete;
+    virtual ~Node() = default;
     
     constexpr bool isRoot() const { return parent_; }
     constexpr bool isLeaf() const { return !left_ && !right_; }
