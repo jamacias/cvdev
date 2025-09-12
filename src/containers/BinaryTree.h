@@ -1,7 +1,5 @@
-#ifndef STRUCTURES_BINARYTREE_H
-#define STRUCTURES_BINARYTREE_H
-
-using namespace Corrade;
+#ifndef CONTAINERS_BINARYTREE_H
+#define CONTAINERS_BINARYTREE_H
 
 template<class T>
 class BinaryTree
@@ -182,4 +180,4 @@ protected:
     Derived* parent_{nullptr};
 };
 
-#endif // STRUCTURES_BINARYTREE_H
+#endif // CONTAINERS_BINARYTREE_H

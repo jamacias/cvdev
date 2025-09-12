@@ -1,8 +1,11 @@
 #include <algorithm>
 #include <string>
 #include <Corrade/TestSuite/Tester.h>
-#include "../structures/BinaryTree.h"
+#include "../containers/BinaryTree.h"
 #include <Corrade/Containers/Array.h>
+#include <Corrade/Utility/Debug.h>
+
+using namespace Corrade;
 
 
 namespace Test { namespace {
