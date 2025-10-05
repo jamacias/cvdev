@@ -25,11 +25,11 @@ public:
     virtual void handleScrollEvent(Platform::Application::ScrollEvent &event) = 0;
     virtual void draw(SceneGraph::DrawableGroup3D &drawables) = 0;
 
-    void setWindowSize(const Vector2i &size);
+    AbstractViewport& setWindowSize(const Vector2i &size);
 
-    void setRelativeViewport(const Range2D &viewport);
+    AbstractViewport& setRelativeViewport(const Range2D &viewport);
 
-    void setViewport(const Range2Di &viewport);
+    AbstractViewport& setViewport(const Range2Di &viewport);
     Range2Di getViewport() const;
 
 private:
@@ -38,8 +38,8 @@ private:
     Range2D relativeViewport_; ///< Viewport relative to the current window size.
     bool viewportActive_ {false};
 
-    [[nodiscard]] Range2D calculateRelativeViewport(const Range2Di &absoluteViewport, const Vector2i &windowSize);
-    [[nodiscard]] Range2Di calculateViewport(const Range2D &relativeViewport, const Vector2i &windowSize);
+    [[nodiscard]] Range2D calculateRelativeViewport(const Range2Di &absoluteViewport, const Vector2i &windowSize) const;
+    [[nodiscard]] Range2Di calculateViewport(const Range2D &relativeViewport, const Vector2i &windowSize) const;
 };
 
 #endif // VIEWPORTS_ABSTRACTVIEWPORT_H

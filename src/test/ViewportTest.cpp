@@ -14,14 +14,12 @@ struct ViewportTest : Corrade::TestSuite::Tester
 {
     explicit ViewportTest();
 
-    void Size();
-    // void Iteration();
+    void ViewportSize();
 };
 
 ViewportTest::ViewportTest()
 {
-    addTests({&ViewportTest::Size});
-    // addTests({&ViewporTest::Iteration});
+    addTests({&ViewportTest::ViewportSize});
 }
 
 
@@ -50,16 +48,28 @@ public:
     }
 };
 
-void ViewportTest::Size()
+void ViewportTest::ViewportSize()
 {
     DummyViewport viewport;
     viewport.setWindowSize(Vector2i{800, 600});
 
+    // Absolute values
     viewport.setViewport(Range2Di(Vector2i(0, 0), Vector2i(800, 600)));
-    CORRADE_COMPARE(viewport.getViewport(), Range2Di(Vector2i(0, 0), Vector2i(800, 600)));
+    CORRADE_COMPARE(viewport.getViewport(),
+                    Range2Di(Vector2i(0, 0), Vector2i(800, 600)));
 
+    // Relative values
     viewport.setRelativeViewport(Range2D(Vector2(0.0, 0.0), Vector2(1.0, 1.0)));
-    CORRADE_COMPARE(viewport.getViewport(), Range2Di(Vector2i(0, 0), Vector2i(800, 600)));
+    CORRADE_COMPARE(viewport.getViewport(),
+                    Range2Di(Vector2i(0, 0), Vector2i(800, 600)));
+
+    // The window size changes and so should the viewport size
+    CORRADE_COMPARE(viewport.setWindowSize({300, 300}).getViewport(),
+                    Range2Di(Vector2i(0, 0), Vector2i(300,300)));
+
+    // Setting a relative or absolute viewport should lead to the same result
+    CORRADE_COMPARE(viewport.setWindowSize(Vector2i{800, 600}).setRelativeViewport(Range2D(Vector2(0.4, 0.2), Vector2(0.6, 0.9))).getViewport(),
+                    viewport.setWindowSize(Vector2i{800, 600}).setViewport(Range2Di(Vector2i(320, 120), Vector2i(480, 540))).getViewport());
 }
 
 } // Test
