@@ -10,3 +10,6 @@
 [submodule "submodules/imgui"]
 	path = submodules/imgui
 	url = git@github.com:ocornut/imgui.git
+[submodule "submodules/magnum-extras"]
+	path = submodules/magnum-extras
+	url = git@github.com:mosra/magnum-extras.git

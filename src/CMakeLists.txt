@@ -2,6 +2,9 @@ find_package(Magnum REQUIRED
     GL
     SceneGraph
     GlfwApplication)
+find_package(MagnumExtras REQUIRED
+    Ui
+    )
 find_package(MagnumIntegration REQUIRED
     ImGui)
 
@@ -33,6 +36,20 @@ target_link_libraries(Application PRIVATE
     Magnum::SceneGraph
     Magnum::Primitives
     MagnumIntegration::ImGui)
+
+add_executable(RoboCockpit RoboCockpit.cpp
+                           ${OBJECTS_LIST}
+                           ${PANELS_LIST}
+                           ${VIEWPORTS_LIST})
+target_link_libraries(RoboCockpit PRIVATE
+    Magnum::Application
+    Magnum::GL
+    Magnum::Magnum
+    Magnum::SceneGraph
+    Magnum::Primitives
+    MagnumExtras::Ui
+    MagnumIntegration::ImGui)
+
 
 # Make the executable a default target to build & run in Visual Studio
 set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Application)
