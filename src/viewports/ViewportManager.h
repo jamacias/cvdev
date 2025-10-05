@@ -9,6 +9,7 @@
 #include <Magnum/Shaders/FlatGL.h>
 #include <Magnum/SceneGraph/Drawable.h>
 #include "../panels/3DView.h"
+#include "../containers/BinaryTree.h"
 
 using namespace Magnum;
 class ViewportManager

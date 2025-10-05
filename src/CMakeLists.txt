@@ -16,6 +16,7 @@ set(PANELS_LIST
     panels/ImagePreview.cpp)
 
 set(VIEWPORTS_LIST
+    viewports/AbstractViewport.cpp
     viewports/ViewportManager.cpp)
 
 

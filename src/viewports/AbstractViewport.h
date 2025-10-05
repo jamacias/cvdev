@@ -1,0 +1,45 @@
+#ifndef VIEWPORTS_ABSTRACTVIEWPORT_H
+#define VIEWPORTS_ABSTRACTVIEWPORT_H
+
+#include <memory>
+#include <Magnum/Math/Range.h>
+#include <Magnum/Platform/GlfwApplication.h>
+#include <Magnum/SceneGraph/Drawable.h>
+#include "../traits/traits.h"
+#include "../containers/BinaryTree.h"
+
+using namespace Magnum;
+class AbstractViewport : public Node<AbstractViewport>
+{
+public:
+    explicit AbstractViewport() = default;
+    virtual ~AbstractViewport() = default;
+    AbstractViewport(const AbstractViewport&) = delete;
+    AbstractViewport(AbstractViewport&&) = delete;
+    AbstractViewport& operator=(const AbstractViewport&) = delete;
+    AbstractViewport& operator=(AbstractViewport&&) = delete;
+
+    virtual void handlePointerPressEvent(Platform::Application::PointerEvent &event) = 0;
+    virtual void handlePointerReleaseEvent(Platform::Application::PointerEvent &event) = 0;
+    virtual void handlePointerMoveEvent(Platform::Application::PointerMoveEvent &event) = 0;
+    virtual void handleScrollEvent(Platform::Application::ScrollEvent &event) = 0;
+    virtual void draw(SceneGraph::DrawableGroup3D &drawables) = 0;
+
+    void setWindowSize(const Vector2i &size);
+
+    void setRelativeViewport(const Range2D &viewport);
+
+    void setViewport(const Range2Di &viewport);
+    Range2Di getViewport() const;
+
+private:
+    Vector2i windowSize_;
+    Range2Di viewport_;
+    Range2D relativeViewport_; ///< Viewport relative to the current window size.
+    bool viewportActive_ {false};
+
+    [[nodiscard]] Range2D calculateRelativeViewport(const Range2Di &absoluteViewport, const Vector2i &windowSize);
+    [[nodiscard]] Range2Di calculateViewport(const Range2D &relativeViewport, const Vector2i &windowSize);
+};
+
+#endif // VIEWPORTS_ABSTRACTVIEWPORT_H
