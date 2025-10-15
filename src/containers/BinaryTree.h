@@ -5,11 +5,30 @@ template<class T>
 class BinaryTree
 {
 public:
-    constexpr explicit BinaryTree(T* root)
+    constexpr explicit BinaryTree(T* root = nullptr)
     : root_(root)
     {
-        size_++;
+        if (root_) size_++;
     }
+
+    BinaryTree(const BinaryTree<T>&) = delete;
+    BinaryTree<T>(BinaryTree<T>&& other)
+    {
+        *this = std::move(other);
+    }
+    BinaryTree<T>& operator=(const BinaryTree<T>&) = delete;
+    BinaryTree<T>& operator=(BinaryTree<T>&& other)
+    {
+        root_ = std::move(other.root_);
+        size_ = other.size_;
+
+        other.root_ = nullptr;
+        other.size_ = 0;
+
+        return *this;
+    }
+    virtual ~BinaryTree() = default;
+    
 
     class Iterator
     {

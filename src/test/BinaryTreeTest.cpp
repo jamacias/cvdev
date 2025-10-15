@@ -4,6 +4,7 @@
 #include "../containers/BinaryTree.h"
 #include <Corrade/Containers/Array.h>
 #include <Corrade/Utility/Debug.h>
+#include <Corrade/Containers/Pointer.h>
 
 using namespace Corrade;
 
@@ -16,6 +17,7 @@ struct BinaryTreeTest : Corrade::TestSuite::Tester
 
     void Size();
     void Iteration();
+    void Move();
 
     void HelloBenchmark();
 };
@@ -24,6 +26,7 @@ BinaryTreeTest::BinaryTreeTest()
 {
     addTests({&BinaryTreeTest::Size});
     addTests({&BinaryTreeTest::Iteration});
+    addTests({&BinaryTreeTest::Move});
 
     addBenchmarks({&BinaryTreeTest::HelloBenchmark}, 100);
 }
@@ -194,6 +197,22 @@ void BinaryTreeTest::Iteration()
     TreeNode node8(8);
     tree.insert(&node5, &node7, &node8);
     CORRADE_VERIFY(checkSequence(tree, Containers::array({3, 1, 4, 0, 7, 5, 8, 2, 6})));
+}
+
+void BinaryTreeTest::Move()
+{
+    TreeNode root(0);
+    Tree tree(&root);
+    TreeNode node1(1);
+    TreeNode node2(2);
+    tree.insert(&root, &node1, &node2);
+    CORRADE_COMPARE(tree.size(), 3);
+    CORRADE_VERIFY(checkSequence(tree, Containers::array({1, 0, 2})));
+        
+    Tree tree2(std::move(tree));
+    CORRADE_COMPARE(tree2.size(), 3);
+    CORRADE_VERIFY(checkSequence(tree2, Containers::array({1, 0, 2})));
+    CORRADE_COMPARE(tree.size(), 0);
 }
 
 void BinaryTreeTest::HelloBenchmark()
