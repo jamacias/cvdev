@@ -33,9 +33,14 @@ public:
     class Iterator
     {
     public:
-        constexpr Iterator(T* node) : node_(node){}
+        using iterator_category = std::forward_iterator_tag;
+        using difference_type   = std::ptrdiff_t;
+        using value_type        = T;
+        using pointer           = value_type*;
+        using reference         = value_type&;
+        constexpr Iterator(pointer node) : node_(node){}
 
-        constexpr T& operator*() const
+        constexpr reference operator*() const
         {
             return *node_;
         }
@@ -52,19 +57,24 @@ public:
         }
 
     private:
-        T* node_;
+        pointer node_;
     };
 
-    Iterator begin() { return Iterator(leftMost(root_)); }
+    Iterator begin() { return root_ ? Iterator(leftMost(root_)) : end(); }
     Iterator end() { return Iterator(nullptr); }
 
 
     class ConstIterator
     {
     public:
-        constexpr ConstIterator(const T* node) : node_(node){}
+        using iterator_category = std::forward_iterator_tag;
+        using difference_type   = std::ptrdiff_t;
+        using value_type        = T;
+        using const_pointer     = const value_type*;
+        using const_reference   = const value_type&;
+        constexpr ConstIterator(const const_pointer node) : node_(node){}
 
-        constexpr const T& operator*() const
+        constexpr const_reference operator*() const
         {
             return *node_;
         }
@@ -81,10 +91,10 @@ public:
         }
 
     private:
-        const T* node_;
+        const_pointer node_;
     };
 
-    constexpr ConstIterator begin() const { return ConstIterator(leftMost(root_)); }
+    constexpr ConstIterator begin() const { return root_ ? ConstIterator(leftMost(root_)) : end(); }
     constexpr ConstIterator end() const { return ConstIterator(nullptr); }
 
     constexpr void insert(T* parent, T* left, T* right)
@@ -144,6 +154,7 @@ private:
 
     static constexpr T* leftMost(T* const current)
     {
+        CORRADE_INTERNAL_ASSERT(current != nullptr);
         T* n =  current;
         while (n->left_ != nullptr)
         {
