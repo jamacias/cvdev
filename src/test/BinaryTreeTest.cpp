@@ -202,17 +202,17 @@ void BinaryTreeTest::Iteration()
 void BinaryTreeTest::Move()
 {
     TreeNode root(0);
-    Tree tree(&root);
+    Tree originalTree(&root);
     TreeNode node1(1);
     TreeNode node2(2);
-    tree.insert(&root, &node1, &node2);
-    CORRADE_COMPARE(tree.size(), 3);
-    CORRADE_VERIFY(checkSequence(tree, Containers::array({1, 0, 2})));
+    originalTree.insert(&root, &node1, &node2);
+    CORRADE_COMPARE(originalTree.size(), 3);
+    CORRADE_VERIFY(checkSequence(originalTree, Containers::array({1, 0, 2})));
         
-    Tree tree2(std::move(tree));
-    CORRADE_COMPARE(tree2.size(), 3);
-    CORRADE_VERIFY(checkSequence(tree2, Containers::array({1, 0, 2})));
-    CORRADE_COMPARE(tree.size(), 0);
+    Tree movedTree(std::move(originalTree));
+    CORRADE_COMPARE(movedTree.size(), 3);
+    CORRADE_VERIFY(checkSequence(movedTree, Containers::array({1, 0, 2})));
+    CORRADE_COMPARE(originalTree.size(), 0);
 }
 
 void BinaryTreeTest::HelloBenchmark()
