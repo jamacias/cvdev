@@ -12,7 +12,7 @@ using namespace Magnum;
 class AbstractViewport : public Node<AbstractViewport>
 {
 public:
-    explicit AbstractViewport() = default;
+    explicit AbstractViewport(const Vector2i &windowSize = {1, 1}, const Range2Di &viewport = {});
     virtual ~AbstractViewport() = default;
     AbstractViewport(const AbstractViewport&) = delete;
     AbstractViewport(AbstractViewport&&) = delete;

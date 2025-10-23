@@ -52,6 +52,8 @@ void ViewportTest::ViewportSize()
 {
     DummyViewport viewport;
     viewport.setWindowSize(Vector2i{800, 600});
+    CORRADE_COMPARE(viewport.getViewport(),
+                    Range2Di(Vector2i(0, 0), Vector2i(0, 0)));
 
     // Absolute values
     viewport.setViewport(Range2Di(Vector2i(0, 0), Vector2i(800, 600)));

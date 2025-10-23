@@ -1,5 +1,11 @@
 #include "AbstractViewport.h"
 
+AbstractViewport::AbstractViewport(const Vector2i &windowSize, const Range2Di &viewport)
+{
+    windowSize_ = windowSize;
+    setViewport(viewport);
+}
+
 AbstractViewport& AbstractViewport::setWindowSize(const Vector2i &size)
 {
     windowSize_ = size;
@@ -38,7 +44,8 @@ Range2Di AbstractViewport::getViewport() const
 Range2D AbstractViewport::calculateRelativeViewport(const Range2Di &absoluteViewport, const Vector2i &windowSize) const
 {
     CORRADE_INTERNAL_ASSERT((absoluteViewport.min() >= Vector2i{0}).all());
-    CORRADE_INTERNAL_ASSERT((absoluteViewport.max() <= windowSize_).all());
+    CORRADE_INTERNAL_ASSERT((absoluteViewport.max() <= windowSize).all());
+    CORRADE_INTERNAL_ASSERT((windowSize > Vector2i{0}).all());
 
     return Range2D{Vector2{absoluteViewport.min()} / Vector2{windowSize}, Vector2{absoluteViewport.max()} / Vector2{windowSize}};
 }
