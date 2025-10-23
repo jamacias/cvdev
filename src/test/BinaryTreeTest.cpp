@@ -92,12 +92,12 @@ constexpr auto checkSequence = [](const Tree &tree, const Containers::ArrayView<
 
 constexpr auto contains = [](const Tree& tree, const TreeNode& treeNode)->bool
 {
-    for (const auto& node : tree)
+    const auto it = std::find_if(tree.begin(), tree.end(), [&](const TreeNode &node)
     {
-        if (&node == &treeNode)
-            return true;
-    }
-    return false;
+        return &node == &treeNode;
+    });
+
+    return it != tree.end();
 };
 
 constexpr auto countNodes = [](const Tree& tree)->std::size_t

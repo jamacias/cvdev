@@ -67,11 +67,14 @@ public:
     class ConstIterator
     {
     public:
+        // TODO: make this class a template and declare all the consts once
         using iterator_category = std::forward_iterator_tag;
         using difference_type   = std::ptrdiff_t;
         using value_type        = T;
         using const_pointer     = const value_type*;
         using const_reference   = const value_type&;
+        using pointer           = value_type*;
+        using reference         = value_type&;
         constexpr ConstIterator(const const_pointer node) : node_(node){}
 
         constexpr const_reference operator*() const
