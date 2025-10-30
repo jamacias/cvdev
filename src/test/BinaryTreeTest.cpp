@@ -40,9 +40,11 @@ public:
     explicit TreeNode(int data)
     : data(data) {}
 
+    bool operator==(const Type value) const { return data == value; }
+
     void printPtrs() const
     {
-        Utility::Debug{} << "this = " << this << "; &left = " << left_ << "; &right = " << right_ << "; &parent_ = " << parent_ << "; data = " << data;
+        Utility::Debug{} << "this = " << this << "; &left = " << left_.get() << "; &right = " << right_.get() << "; &parent_ = " << parent_ << "; data = " << data;
     
         /*
              parent
@@ -59,7 +61,7 @@ public:
                          << "\n   |\n  "
                          << data
                          << "\n  / \\\n"
-                         << printNodeIfValid(left_) << " " << printNodeIfValid(right_)
+                         << printNodeIfValid(left_.get()) << " " << printNodeIfValid(right_.get())
                          ;
     }
 };
@@ -90,12 +92,9 @@ constexpr auto checkSequence = [](const Tree &tree, const Containers::ArrayView<
     return ok;
 };
 
-constexpr auto contains = [](const Tree& tree, const TreeNode& treeNode)->bool
+constexpr auto contains = [](const Tree& tree, const TreeNode::Type& value)->bool
 {
-    const auto it = std::find_if(tree.begin(), tree.end(), [&](const TreeNode &node)
-    {
-        return &node == &treeNode;
-    });
+    const auto it = std::find(tree.begin(), tree.end(), value);
 
     return it != tree.end();
 };
@@ -124,41 +123,55 @@ void BinaryTreeTest::Size()
          7   8
     */
 
-    TreeNode root(0);
+    auto root = std::make_unique<TreeNode>(0);
 
-    Tree tree(&root);
-    CORRADE_VERIFY(tree.size() == 1);
-    CORRADE_VERIFY(tree.size() == countNodes(tree));
-    TreeNode node1(1);
-    TreeNode node2(2);
-    tree.insert(&root, &node1, &node2);
-    CORRADE_VERIFY(tree.size() == 3);
-    CORRADE_VERIFY(tree.size() == countNodes(tree));
-    TreeNode node3(3);
-    TreeNode node4(4);
-    tree.insert(&node1, &node3, &node4);
-    CORRADE_VERIFY(tree.size() == 5);
-    CORRADE_VERIFY(tree.size() == countNodes(tree));
-    TreeNode node5(5);
-    TreeNode node6(6);
-    tree.insert(&node2, &node5, &node6);
-    CORRADE_VERIFY(tree.size() == 7);
-    CORRADE_VERIFY(tree.size() == countNodes(tree));
-    TreeNode node7(7);
-    TreeNode node8(8);
-    tree.insert(&node5, &node7, &node8);
-    CORRADE_VERIFY(tree.size() == 9);
-    CORRADE_VERIFY(tree.size() == countNodes(tree));
+    Tree tree(std::move(root));
+    CORRADE_COMPARE(tree.size(), 1);
+    CORRADE_COMPARE(tree.size(), countNodes(tree));
+
+    tree.insert(std::find(tree.begin(), tree.end(), 0),
+                std::make_unique<TreeNode>(1),
+                std::make_unique<TreeNode>(2));
+    CORRADE_COMPARE(tree.size(), 3);
+    CORRADE_COMPARE(tree.size(), countNodes(tree));
+
+    tree.insert(std::find(tree.begin(), tree.end(), 1),
+                std::make_unique<TreeNode>(3),
+                std::make_unique<TreeNode>(4));
+    CORRADE_COMPARE(tree.size(), 5);
+    CORRADE_COMPARE(tree.size(), countNodes(tree));
+
+    tree.insert(std::find(tree.begin(), tree.end(), 2),
+                std::make_unique<TreeNode>(5),
+                std::make_unique<TreeNode>(6));
+    CORRADE_COMPARE(tree.size(), 7);
+    CORRADE_COMPARE(tree.size(), countNodes(tree));
+
+    tree.insert(std::find(tree.begin(), tree.end(), 5),
+                std::make_unique<TreeNode>(7),
+                std::make_unique<TreeNode>(8));
+    CORRADE_COMPARE(tree.size(), 9);
+    CORRADE_COMPARE(tree.size(), countNodes(tree));
 
     // Delete one leaf, should delete the sibling too
-    tree.remove(&node8);
-    CORRADE_VERIFY(tree.size() == 7);
-    CORRADE_VERIFY(!contains(tree, node8));
+    tree.remove(std::find(tree.begin(), tree.end(), 8));
+    CORRADE_COMPARE(tree.size(), countNodes(tree));
+    CORRADE_COMPARE(tree.size(), 7);
+    CORRADE_VERIFY(!contains(tree, 8));
+    CORRADE_VERIFY(!contains(tree, 7));
+    CORRADE_VERIFY(checkSequence(tree, Containers::array({3, 1, 4, 0, 5, 2, 6})));
 
     // Delete a node that is not a leaf, should delete the sibling and all its children
-    tree.remove(&node1);
-    CORRADE_VERIFY(tree.size() == 1);
-    CORRADE_VERIFY(!contains(tree, node1));
+    tree.remove(std::find(tree.begin(), tree.end(), 1));
+    CORRADE_COMPARE(tree.size(), countNodes(tree));
+    CORRADE_COMPARE(tree.size(), 1);
+    CORRADE_VERIFY(!contains(tree, 1));
+    CORRADE_VERIFY(!contains(tree, 2));
+    CORRADE_VERIFY(!contains(tree, 3));
+    CORRADE_VERIFY(!contains(tree, 4));
+    CORRADE_VERIFY(!contains(tree, 5));
+    CORRADE_VERIFY(!contains(tree, 6));
+    CORRADE_VERIFY(checkSequence(tree, Containers::array({0})));
 }
 
 void BinaryTreeTest::Iteration()
@@ -174,45 +187,44 @@ void BinaryTreeTest::Iteration()
          7   8
     */
 
-    TreeNode root(0);
-    Tree tree(&root);
+    Tree tree(std::make_unique<TreeNode>(0));
     CORRADE_VERIFY(checkSequence(tree, Containers::array({0})));
 
-    TreeNode node1(1);
-    TreeNode node2(2);
-    tree.insert(&root, &node1, &node2);
+    tree.insert(std::find(tree.begin(), tree.end(), 0),
+                std::make_unique<TreeNode>(1),
+                std::make_unique<TreeNode>(2));
     CORRADE_VERIFY(checkSequence(tree, Containers::array({1, 0, 2})));
 
-    TreeNode node3(3);
-    TreeNode node4(4);
-    tree.insert(&node1, &node3, &node4);
+    tree.insert(std::find(tree.begin(), tree.end(), 1),
+                std::make_unique<TreeNode>(3),
+                std::make_unique<TreeNode>(4));
     CORRADE_VERIFY(checkSequence(tree, Containers::array({3, 1, 4, 0, 2})));
 
-    TreeNode node5(5);
-    TreeNode node6(6);
-    tree.insert(&node2, &node5, &node6);
+    tree.insert(std::find(tree.begin(), tree.end(), 2),
+                std::make_unique<TreeNode>(5),
+                std::make_unique<TreeNode>(6));
     CORRADE_VERIFY(checkSequence(tree, Containers::array({3, 1, 4, 0, 5, 2, 6})));
 
-    TreeNode node7(7);
-    TreeNode node8(8);
-    tree.insert(&node5, &node7, &node8);
+    tree.insert(std::find(tree.begin(), tree.end(), 5),
+                std::make_unique<TreeNode>(7),
+                std::make_unique<TreeNode>(8));
     CORRADE_VERIFY(checkSequence(tree, Containers::array({3, 1, 4, 0, 7, 5, 8, 2, 6})));
 }
 
 void BinaryTreeTest::Move()
 {
-    TreeNode root(0);
-    Tree originalTree(&root);
-    TreeNode node1(1);
-    TreeNode node2(2);
-    originalTree.insert(&root, &node1, &node2);
+    Tree originalTree(std::make_unique<TreeNode>(0));
+    originalTree.insert(std::find(originalTree.begin(), originalTree.end(), 0),
+                        std::make_unique<TreeNode>(1),
+                        std::make_unique<TreeNode>(2));
     CORRADE_COMPARE(originalTree.size(), 3);
     CORRADE_VERIFY(checkSequence(originalTree, Containers::array({1, 0, 2})));
-        
+
     Tree movedTree(std::move(originalTree));
     CORRADE_COMPARE(movedTree.size(), 3);
     CORRADE_VERIFY(checkSequence(movedTree, Containers::array({1, 0, 2})));
     CORRADE_COMPARE(originalTree.size(), 0);
+    CORRADE_VERIFY(checkSequence(originalTree, Containers::Array<TreeNode::Type>()));
 }
 
 void BinaryTreeTest::HelloBenchmark()

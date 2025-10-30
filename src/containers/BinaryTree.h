@@ -1,12 +1,14 @@
 #ifndef CONTAINERS_BINARYTREE_H
 #define CONTAINERS_BINARYTREE_H
 
+#include <memory>
+
 template<class T>
 class BinaryTree
 {
 public:
-    constexpr explicit BinaryTree(T* root = nullptr)
-    : root_(root)
+    constexpr explicit BinaryTree(std::unique_ptr<T> root = nullptr)
+    : root_(std::move(root))
     {
         if (root_) size_++;
     }
@@ -28,89 +30,71 @@ public:
         return *this;
     }
     virtual ~BinaryTree() = default;
-    
 
-    class Iterator
+    template<class I>
+    class iterator;
+    using Iterator = iterator<T>;
+    using ConstIterator = iterator<const T>;
+
+    template<class I>
+    class iterator
     {
     public:
         using iterator_category = std::forward_iterator_tag;
         using difference_type   = std::ptrdiff_t;
-        using value_type        = T;
+        using value_type        = I;
         using pointer           = value_type*;
         using reference         = value_type&;
-        constexpr Iterator(pointer node) : node_(node){}
+        constexpr explicit iterator(pointer node) : node_(node){}
 
         constexpr reference operator*() const
         {
             return *node_;
         }
 
-        constexpr bool operator!=(const Iterator& other) const
+        constexpr pointer operator->() const
+        {
+            return node_;
+        }
+
+        constexpr bool operator!=(const iterator& other) const
         {
             return node_ != other.node_;
         }
 
-        Iterator& operator++()
+        iterator& operator++()
         {
             node_ = next(node_);
             return *this;
         }
 
+        constexpr pointer get() const
+        {
+            return node_;
+        }
+
     private:
-        pointer node_;
+        pointer node_ {nullptr};
     };
 
-    Iterator begin() { return root_ ? Iterator(leftMost(root_)) : end(); }
+    Iterator begin() { return root_ ? Iterator(leftMost(root_.get())) : end(); }
     Iterator end() { return Iterator(nullptr); }
 
-
-    class ConstIterator
-    {
-    public:
-        // TODO: make this class a template and declare all the consts once
-        using iterator_category = std::forward_iterator_tag;
-        using difference_type   = std::ptrdiff_t;
-        using value_type        = T;
-        using const_pointer     = const value_type*;
-        using const_reference   = const value_type&;
-        using pointer           = value_type*;
-        using reference         = value_type&;
-        constexpr ConstIterator(const const_pointer node) : node_(node){}
-
-        constexpr const_reference operator*() const
-        {
-            return *node_;
-        }
-
-        constexpr bool operator!=(const ConstIterator& other) const
-        {
-            return node_ != other.node_;
-        }
-
-        ConstIterator& operator++()
-        {
-            node_ = next(node_);
-            return *this;
-        }
-
-    private:
-        const_pointer node_;
-    };
-
-    constexpr ConstIterator begin() const { return root_ ? ConstIterator(leftMost(root_)) : end(); }
+    constexpr ConstIterator begin() const { return root_ ? ConstIterator(leftMost(root_.get())) : end(); }
     constexpr ConstIterator end() const { return ConstIterator(nullptr); }
 
-    constexpr void insert(T* parent, T* left, T* right)
+    constexpr void insert(Iterator parent, std::unique_ptr<T> left, std::unique_ptr<T> right)
     {
-        CORRADE_INTERNAL_ASSERT(parent && left && right);
+        CORRADE_INTERNAL_ASSERT(parent.get() && left && right);
         CORRADE_ASSERT(parent->isLeaf(), "BinaryTree::insert(): the parent cannot already have children", );
         // At the bottom => append if it is a leaf
 
-        parent->left_ = left;
-        parent->right_ = right;
+        left->parent_ = parent.get();
+        right->parent_ = parent.get();
 
-        left->parent_ = parent;
-        right->parent_ = parent;
+        parent->left_ = std::move(left);
+        parent->right_ = std::move(right);
+
 
         // TODO:
         // At the top => move the root node
@@ -119,9 +103,9 @@ public:
         size_ += 2;
     }
 
-    constexpr void remove(T* node)
+    constexpr void remove(Iterator node)
     {
-        if (!node) return;
+        if (!node.get()) return;
 
         T* nextPtr {nullptr};
         do
@@ -138,9 +122,9 @@ public:
             nextPtr = next(current);
         } while (nextPtr != nullptr && nextPtr->isLeaf() && nextPtr != node->parent_);
 
-        remove(node->parent_->right_);
+        remove(Iterator(node->parent_->right_.get()));
 
-        if (!node->isLeaf())
+        if (node->isLeaf())
         {
             size_ -= 2;
         }
@@ -152,7 +136,7 @@ public:
     }
 
 private:
-    T* root_{nullptr};
+    std::unique_ptr<T> root_{nullptr};
     std::size_t size_{0};
 
     static constexpr T* leftMost(T* const current)
@@ -161,7 +145,7 @@ private:
         T* n =  current;
         while (n->left_ != nullptr)
         {
-            n = n->left_;
+            n = n->left_.get();
         }
 
         CORRADE_INTERNAL_ASSERT(n->isLeaf());
@@ -174,11 +158,11 @@ private:
         CORRADE_INTERNAL_ASSERT(current != nullptr);
         if (current->right_ != nullptr)
         {
-            return leftMost(current->right_);
+            return leftMost(current->right_.get());
         }
 
         T* n = current->parent_;
-        while (n != nullptr && current == n->right_)
+        while (n != nullptr && current == n->right_.get())
         {
             current = n;
             n = n->parent_;
@@ -208,8 +192,8 @@ public:
     constexpr bool isRoot() const { return parent_; }
     constexpr bool isLeaf() const { return !left_ && !right_; }
 protected:
-    Derived* left_{nullptr};
-    Derived* right_{nullptr};
+    std::unique_ptr<Derived> left_{nullptr};
+    std::unique_ptr<Derived> right_{nullptr};
     Derived* parent_{nullptr};
 };
 
