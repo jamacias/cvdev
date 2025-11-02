@@ -1,0 +1,68 @@
+#include "ViewportTree.h"
+
+ViewportNode::ViewportNode(const Vector2i &windowSize, const Range2Di &coordinates)
+{
+    windowSize_ = windowSize;
+
+    if (coordinates == Range2Di{})
+        setCoordinates({{0, 0}, windowSize});
+    else
+        setCoordinates(coordinates);
+}
+
+ViewportNode& ViewportNode::setWindowSize(const Vector2i &size)
+{
+    windowSize_ = size;
+    coordinates_ = calculateCoordinates(relativeCoordinates_, windowSize_);
+
+    return *this;
+}
+
+Vector2i ViewportNode::getWindowSize() const
+{
+    return windowSize_;
+}
+
+ViewportNode& ViewportNode::setRelativeCoordinates(const Range2D &relativeCoordinates)
+{
+    CORRADE_INTERNAL_ASSERT((relativeCoordinates.min() >= Vector2{0.0f}).all());
+    CORRADE_INTERNAL_ASSERT((relativeCoordinates.max() <= Vector2{1.0f}).all());
+
+    relativeCoordinates_ = relativeCoordinates;
+    coordinates_ = calculateCoordinates(relativeCoordinates, windowSize_);
+
+    return *this;
+}
+
+ViewportNode& ViewportNode::setCoordinates(const Range2Di &coordinates)
+{
+    CORRADE_INTERNAL_ASSERT((coordinates.min() >= Vector2i{0}).all());
+    CORRADE_INTERNAL_ASSERT((coordinates.max() <= windowSize_).all());
+    
+    coordinates_ = coordinates;
+    relativeCoordinates_ = calculateRelativeCoordinates(coordinates, windowSize_);
+
+    return *this;
+}
+
+Range2Di ViewportNode::getCoordinates() const
+{
+    return coordinates_;
+}
+
+Range2D ViewportNode::calculateRelativeCoordinates(const Range2Di &absoluteViewport, const Vector2i &windowSize) const
+{
+    CORRADE_INTERNAL_ASSERT((absoluteViewport.min() >= Vector2i{0}).all());
+    CORRADE_INTERNAL_ASSERT((absoluteViewport.max() <= windowSize).all());
+    CORRADE_INTERNAL_ASSERT((windowSize > Vector2i{0}).all());
+
+    return Range2D{Vector2{absoluteViewport.min()} / Vector2{windowSize}, Vector2{absoluteViewport.max()} / Vector2{windowSize}};
+}
+
+Range2Di ViewportNode::calculateCoordinates(const Range2D &relativeCoordinates, const Vector2i &windowSize) const
+{
+    CORRADE_INTERNAL_ASSERT((relativeCoordinates_.min() >= Vector2{0.0f}).all());
+    CORRADE_INTERNAL_ASSERT((relativeCoordinates_.max() <= Vector2{1.0f}).all());
+
+    return Range2Di{relativeCoordinates.min() * windowSize, relativeCoordinates.max() * windowSize};
+}
