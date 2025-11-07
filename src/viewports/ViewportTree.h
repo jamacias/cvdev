@@ -65,6 +65,9 @@ public:
     ViewportTree& operator=(const ViewportTree&) = delete;
     ViewportTree& operator=(ViewportTree&&) = delete;
 
+    using BinaryTree<ViewportNode>::begin;
+    using BinaryTree<ViewportNode>::end;
+
     Iterator findActiveViewport(const Vector2i& coordinates)
     {
         if ((coordinates < Vector2i{0}).all())
