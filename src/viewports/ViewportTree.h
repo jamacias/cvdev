@@ -48,6 +48,12 @@ private:
 class ViewportTree : private BinaryTree<ViewportNode>
 {
 public:
+    enum class PartitionDirection : uint8_t
+    {
+        HORIZONTAL = 0,
+        VERTICAL
+    };
+
     explicit ViewportTree(const Vector2i &windowSize)
     : BinaryTree(std::make_unique<ViewportNode>(windowSize))
     {
@@ -68,16 +74,25 @@ public:
                             { return viewport.getCoordinates().contains(coordinates) && viewport.isLeaf(); });
     }
 
-    void divide(const Vector2i& coordinates)
+    void divide(const Vector2i& coordinates, const PartitionDirection& direction)
     {
         Iterator parent = findActiveViewport(coordinates);
 
         const auto parentViewport = parent->getCoordinates();
-
-        const auto newViewportSize = parentViewport.size() / Vector2i(2, 1);
-        const auto viewport1 = Range2Di::fromSize({}, newViewportSize);
-        const auto viewport2 = Range2Di::fromSize(viewport1.bottomRight(), newViewportSize);
         const auto windowSize = parent->getWindowSize();
+
+        // Assume vertical partitioning and recalculate otherwise
+        auto newViewportSize = parentViewport.size() / Vector2i(2, 1);
+        auto viewport1 = Range2Di::fromSize(parentViewport.bottomLeft(), newViewportSize);
+        auto viewport2 = Range2Di::fromSize(viewport1.bottomRight(), newViewportSize);
+        if (direction == PartitionDirection::HORIZONTAL)
+        {
+            newViewportSize = parentViewport.size() / Vector2i(1, 2);
+            viewport1 = Range2Di::fromSize(parentViewport.bottomLeft(), newViewportSize);
+            viewport2 = Range2Di::fromSize(viewport1.topLeft(), newViewportSize);
+        }
+
+        CORRADE_INTERNAL_ASSERT(Math::join(viewport1, viewport2) == parentViewport);
 
         insert(parent,
                std::make_unique<ViewportNode>(windowSize, Range2Di(viewport1)),
