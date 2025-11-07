@@ -32,6 +32,8 @@ public:
     ViewportNode& setCoordinates(const Range2Di &coordinates);
     Range2Di getCoordinates() const;
 
+    constexpr bool isVisible() const { return isLeaf(); }
+
     friend ViewportTree;
     friend BinaryTree<ViewportNode>;
 
@@ -74,7 +76,7 @@ public:
             return end();
 
         return std::find_if(begin(), end(), [&](const ViewportNode &viewport)
-                            { return viewport.getCoordinates().contains(coordinates) && viewport.isLeaf(); });
+                            { return viewport.getCoordinates().contains(coordinates) && viewport.isVisible(); });
     }
 
     void divide(const Vector2i& coordinates, const PartitionDirection& direction)
