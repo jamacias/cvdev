@@ -189,7 +189,7 @@ public:
     Node<Derived>& operator=(Node<Derived>&& other) = delete;
     virtual ~Node() = default;
     
-    constexpr bool isRoot() const { return parent_; }
+    constexpr bool isRoot() const { return !parent_; }
     constexpr bool isLeaf() const { return !left_ && !right_; }
 protected:
     std::unique_ptr<Derived> left_{nullptr};

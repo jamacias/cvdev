@@ -18,6 +18,7 @@ struct BinaryTreeTest : Corrade::TestSuite::Tester
     void Size();
     void Iteration();
     void MoveTree();
+    void LeafAndRoot();
 
     void HelloBenchmark();
 };
@@ -27,6 +28,7 @@ BinaryTreeTest::BinaryTreeTest()
     addTests({&BinaryTreeTest::Size});
     addTests({&BinaryTreeTest::Iteration});
     addTests({&BinaryTreeTest::MoveTree});
+    addTests({&BinaryTreeTest::LeafAndRoot});
 
     addBenchmarks({&BinaryTreeTest::HelloBenchmark}, 100);
 }
@@ -225,6 +227,26 @@ void BinaryTreeTest::MoveTree()
     CORRADE_VERIFY(checkSequence(movedTree, Containers::array({1, 0, 2})));
     CORRADE_COMPARE(originalTree.size(), 0);
     CORRADE_VERIFY(checkSequence(originalTree, Containers::Array<TreeNode::Type>()));
+}
+
+void BinaryTreeTest::LeafAndRoot()
+{
+    Tree tree(std::make_unique<TreeNode>(0));
+    const auto zero = std::find(tree.begin(), tree.end(), 0);
+    CORRADE_COMPARE(zero->isLeaf(), true);
+    CORRADE_COMPARE(zero->isRoot(), true);
+
+    tree.insert(zero,
+                std::make_unique<TreeNode>(1),
+                std::make_unique<TreeNode>(2));
+    const auto one = std::find(tree.begin(), tree.end(), 1);
+    const auto two = std::find(tree.begin(), tree.end(), 2);
+    CORRADE_COMPARE(zero->isLeaf(), false);
+    CORRADE_COMPARE(zero->isRoot(), true);
+    CORRADE_COMPARE(one->isLeaf(), true);
+    CORRADE_COMPARE(one->isRoot(), false);
+    CORRADE_COMPARE(one->isLeaf(), two->isLeaf());
+    CORRADE_COMPARE(one->isRoot(), two->isRoot());
 }
 
 void BinaryTreeTest::HelloBenchmark()
