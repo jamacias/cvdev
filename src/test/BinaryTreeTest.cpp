@@ -19,6 +19,7 @@ struct BinaryTreeTest : Corrade::TestSuite::Tester
     void Iteration();
     void MoveTree();
     void LeafAndRoot();
+    void CutNode();
 
     void HelloBenchmark();
 };
@@ -29,6 +30,7 @@ BinaryTreeTest::BinaryTreeTest()
     addTests({&BinaryTreeTest::Iteration});
     addTests({&BinaryTreeTest::MoveTree});
     addTests({&BinaryTreeTest::LeafAndRoot});
+    addTests({&BinaryTreeTest::CutNode});
 
     addBenchmarks({&BinaryTreeTest::HelloBenchmark}, 100);
 }
@@ -247,6 +249,71 @@ void BinaryTreeTest::LeafAndRoot()
     CORRADE_COMPARE(one->isRoot(), false);
     CORRADE_COMPARE(one->isLeaf(), two->isLeaf());
     CORRADE_COMPARE(one->isRoot(), two->isRoot());
+}
+
+void BinaryTreeTest::CutNode()
+{
+    /*
+    Start with:
+          0
+        /   \
+       1     2
+      / \ 
+     3   4
+    */
+    Tree tree(std::make_unique<TreeNode>(0));
+    tree.insert(std::find(tree.begin(), tree.end(), 0),
+                        std::make_unique<TreeNode>(1),
+                        std::make_unique<TreeNode>(2));
+    CORRADE_COMPARE(tree.size(), 3);
+    CORRADE_VERIFY(checkSequence(tree, Containers::array({1, 0, 2})));
+
+    tree.insert(std::find(tree.begin(), tree.end(), 1),
+                std::make_unique<TreeNode>(3),
+                std::make_unique<TreeNode>(4));
+    CORRADE_COMPARE(tree.size(), 5);
+    CORRADE_VERIFY(checkSequence(tree, Containers::array({3, 1, 4, 0, 2})));
+
+    {
+        // Cut the root
+        const auto nodeToCut = std::find(tree.begin(), tree.end(), 0);
+        const auto nodeToCutRef = nodeToCut.get();
+        auto cutNode = tree.cut(nodeToCut);
+        CORRADE_COMPARE(cutNode.get(), nodeToCutRef);
+        CORRADE_COMPARE(cutNode->isRoot(), true);
+        CORRADE_COMPARE(cutNode->isLeaf(), false);
+
+        // Rebuild tree to continue the tests
+        tree = Tree(std::move(cutNode));
+    }
+
+    {
+        // Cut an intermediate node
+        const auto nodeToCut = std::find(tree.begin(), tree.end(), 1);
+        const auto nodeToCutRef = nodeToCut.get();
+        auto cutNode = tree.cut(nodeToCut);
+        CORRADE_COMPARE(cutNode.get(), nodeToCutRef);
+        CORRADE_COMPARE(cutNode->isRoot(), true);
+        CORRADE_COMPARE(cutNode->isLeaf(), false);
+
+        // Rebuild tree to continue the tests, this time it looks like:
+        /*
+          1
+         / \
+        3   4
+        */
+        tree = Tree(std::move(cutNode));
+    }
+
+    {
+        // Cut a leaf node
+        const auto nodeToCut = std::find(tree.begin(), tree.end(), 4);
+        const auto nodeToCutRef = nodeToCut.get();
+        auto cutNode = tree.cut(nodeToCut);
+        CORRADE_COMPARE(cutNode.get(), nodeToCutRef);
+        CORRADE_COMPARE(cutNode->isRoot(), true);
+        CORRADE_COMPARE(cutNode->isLeaf(), true);
+    }
 }
 
 void BinaryTreeTest::HelloBenchmark()

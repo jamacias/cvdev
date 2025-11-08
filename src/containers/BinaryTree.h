@@ -130,6 +130,28 @@ public:
         }
     }
 
+    constexpr std::unique_ptr<T> cut(Iterator node)
+    {
+        CORRADE_INTERNAL_ASSERT(node.get());
+        
+        if (node->isRoot())
+            return std::move(root_);
+
+        std::unique_ptr<T> returnNode {nullptr};
+        if (node->parent_->left_.get() == node.get()) // Node to cut is left
+        {
+            returnNode = std::move(node->parent_->left_);
+        }
+        else if (node->parent_->right_.get() == node.get()) // Node to cut is right
+        {
+            returnNode = std::move(node->parent_->right_);
+        }
+
+        node->parent_ = nullptr;
+
+        return returnNode;
+    }
+
     constexpr std::size_t size() const
     {
         return size_;
