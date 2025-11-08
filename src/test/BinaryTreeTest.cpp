@@ -17,7 +17,7 @@ struct BinaryTreeTest : Corrade::TestSuite::Tester
 
     void Size();
     void Iteration();
-    void Move();
+    void MoveTree();
 
     void HelloBenchmark();
 };
@@ -26,7 +26,7 @@ BinaryTreeTest::BinaryTreeTest()
 {
     addTests({&BinaryTreeTest::Size});
     addTests({&BinaryTreeTest::Iteration});
-    addTests({&BinaryTreeTest::Move});
+    addTests({&BinaryTreeTest::MoveTree});
 
     addBenchmarks({&BinaryTreeTest::HelloBenchmark}, 100);
 }
@@ -211,7 +211,7 @@ void BinaryTreeTest::Iteration()
     CORRADE_VERIFY(checkSequence(tree, Containers::array({3, 1, 4, 0, 7, 5, 8, 2, 6})));
 }
 
-void BinaryTreeTest::Move()
+void BinaryTreeTest::MoveTree()
 {
     Tree originalTree(std::make_unique<TreeNode>(0));
     originalTree.insert(std::find(originalTree.begin(), originalTree.end(), 0),
