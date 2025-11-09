@@ -20,6 +20,7 @@ struct BinaryTreeTest : Corrade::TestSuite::Tester
     void MoveTree();
     void LeafAndRoot();
     void CutNode();
+    void InsertNode();
 
     void HelloBenchmark();
 };
@@ -31,6 +32,7 @@ BinaryTreeTest::BinaryTreeTest()
     addTests({&BinaryTreeTest::MoveTree});
     addTests({&BinaryTreeTest::LeafAndRoot});
     addTests({&BinaryTreeTest::CutNode});
+    addTests({&BinaryTreeTest::InsertNode});
 
     addBenchmarks({&BinaryTreeTest::HelloBenchmark}, 100);
 }
@@ -314,6 +316,29 @@ void BinaryTreeTest::CutNode()
         CORRADE_COMPARE(cutNode->isRoot(), true);
         CORRADE_COMPARE(cutNode->isLeaf(), true);
     }
+}
+
+void BinaryTreeTest::InsertNode()
+{
+    /*
+    Start with:
+          0
+        /   \
+       1     2
+      / \ 
+     3   4
+    */
+    Tree tree(std::make_unique<TreeNode>(0));
+    const auto zero = std::find(tree.begin(), tree.end(), 0);
+    tree.insert(zero,
+                nullptr,
+                std::make_unique<TreeNode>(2));
+    CORRADE_COMPARE(tree.size(), 2);
+    tree.insert(zero,
+                std::make_unique<TreeNode>(1),
+                nullptr);
+    CORRADE_COMPARE(tree.size(), 3);
+    CORRADE_VERIFY(checkSequence(tree, Containers::array({1, 0, 2})));
 }
 
 void BinaryTreeTest::HelloBenchmark()

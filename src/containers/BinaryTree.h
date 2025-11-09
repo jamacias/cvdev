@@ -85,22 +85,27 @@ public:
 
     constexpr void insert(Iterator parent, std::unique_ptr<T> left, std::unique_ptr<T> right)
     {
-        CORRADE_INTERNAL_ASSERT(parent.get() && left && right);
-        CORRADE_ASSERT(parent->isLeaf(), "BinaryTree::insert(): the parent cannot already have children", );
+        CORRADE_INTERNAL_ASSERT(parent.get() && (left || right));
+        CORRADE_ASSERT((left && !parent->left_) || (right && !parent->right_), "BinaryTree::insert(): the parent cannot already have children", );
         // At the bottom => append if it is a leaf
 
-        left->parent_ = parent.get();
-        right->parent_ = parent.get();
+        if (left)
+        {
+            left->parent_ = parent.get();
+            parent->left_ = std::move(left);
+            size_ += 1;
+        }
 
-        parent->left_ = std::move(left);
-        parent->right_ = std::move(right);
-
+        if (right)
+        {
+            right->parent_ = parent.get();
+            parent->right_ = std::move(right);
+            size_ += 1;
+        }
 
         // TODO:
         // At the top => move the root node
         // At the middle => move nodes and insert in the middle
-
-        size_ += 2;
     }
 
     constexpr void remove(Iterator node)
