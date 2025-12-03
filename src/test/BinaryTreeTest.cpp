@@ -21,6 +21,7 @@ struct BinaryTreeTest : Corrade::TestSuite::Tester
     void LeafAndRoot();
     void CutNode();
     void InsertNode();
+    void Siblings();
 
     void HelloBenchmark();
 };
@@ -33,6 +34,7 @@ BinaryTreeTest::BinaryTreeTest()
     addTests({&BinaryTreeTest::LeafAndRoot});
     addTests({&BinaryTreeTest::CutNode});
     addTests({&BinaryTreeTest::InsertNode});
+    addTests({&BinaryTreeTest::Siblings});
 
     addBenchmarks({&BinaryTreeTest::HelloBenchmark}, 100);
 }
@@ -46,7 +48,11 @@ public:
     explicit TreeNode(int data)
     : data(data) {}
 
-    bool operator==(const Type value) const { return data == value; }
+    constexpr bool operator==(const Type value) const { return data == value; }
+
+    // Expose left and right so that we can better test when the trees are imbalanced and cannot be iterated
+    TreeNode const* left() const { return left_.get(); }
+    TreeNode const* right() const { return right_.get(); }
 
     void printPtrs() const
     {
@@ -339,6 +345,37 @@ void BinaryTreeTest::InsertNode()
                 nullptr);
     CORRADE_COMPARE(tree.size(), 3);
     CORRADE_VERIFY(checkSequence(tree, Containers::array({1, 0, 2})));
+}
+
+void BinaryTreeTest::Siblings()
+{
+    /*
+          0
+        /   \
+       1     2
+    */
+    Tree tree(std::make_unique<TreeNode>(0));
+    const auto zero = std::find(tree.begin(), tree.end(), 0);
+    tree.insert(zero,
+                std::make_unique<TreeNode>(1),
+                std::make_unique<TreeNode>(2));
+    const auto one = std::find(tree.begin(), tree.end(), 1);
+    CORRADE_COMPARE(one->sibling()->data, 2);
+    const auto two = std::find(tree.begin(), tree.end(), 2);
+    CORRADE_COMPARE(two->sibling()->data, 1);
+
+    /*
+          0
+        /   \
+       1     2
+        \
+         3
+    */
+    // Insert only one node. Null siblings are allowed
+    tree.insert(one,
+                nullptr,
+                std::make_unique<TreeNode>(3));
+    CORRADE_COMPARE(one->right()->sibling(), nullptr);
 }
 
 void BinaryTreeTest::HelloBenchmark()

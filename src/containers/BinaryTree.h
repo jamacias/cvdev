@@ -218,6 +218,18 @@ public:
     
     constexpr bool isRoot() const { return !parent_; }
     constexpr bool isLeaf() const { return !left_ && !right_; }
+    constexpr Derived const * sibling() const
+    {
+        CORRADE_INTERNAL_ASSERT(!isRoot());
+
+        Derived* sibling {nullptr};
+        if (parent_->left_.get() == this)
+            sibling = parent_->right_.get();
+        else if (parent_->right_.get() == this)
+            sibling = parent_->left_.get();
+
+        return sibling;
+    }
 protected:
     std::unique_ptr<Derived> left_{nullptr};
     std::unique_ptr<Derived> right_{nullptr};
