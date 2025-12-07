@@ -218,7 +218,7 @@ public:
     
     constexpr bool isRoot() const { return !parent_; }
     constexpr bool isLeaf() const { return !left_ && !right_; }
-    constexpr Derived const * sibling() const
+    constexpr Derived* sibling() const
     {
         CORRADE_INTERNAL_ASSERT(!isRoot());
 
