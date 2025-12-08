@@ -49,6 +49,7 @@ public:
     : data(data) {}
 
     constexpr bool operator==(const Type value) const { return data == value; }
+    constexpr bool operator==(const TreeNode &node) const { return data == node.data /*&& this == &node*/; }
 
     // Expose left and right so that we can better test when the trees are imbalanced and cannot be iterated
     TreeNode const* left() const { return left_.get(); }
@@ -102,6 +103,27 @@ constexpr auto checkSequence = [](const Tree &tree, const Containers::ArrayView<
         });
 
     return ok;
+};
+
+// Helper function similar to std::equal that also checks the size.
+constexpr auto equal = [](const Tree &tree, const TreeNode &node)->bool
+{
+    if (std::distance(tree.begin(), tree.end()) != std::distance(node.begin(), node.end()))
+    {
+        return false;
+    }
+    
+    auto treeBeginning = tree.begin();
+    auto nodeBeginning = node.begin();
+    for (; treeBeginning != tree.end(); ++treeBeginning, ++nodeBeginning)
+    {
+        if (!(*treeBeginning == *nodeBeginning))
+        {
+            return false;
+        }
+    }
+
+    return true;
 };
 
 constexpr auto contains = [](const Tree& tree, const TreeNode::Type& value)->bool
@@ -201,26 +223,32 @@ void BinaryTreeTest::Iteration()
 
     Tree tree(std::make_unique<TreeNode>(0));
     CORRADE_VERIFY(checkSequence(tree, Containers::array({0})));
+    CORRADE_VERIFY(std::equal(tree.begin(), tree.end(), std::find(tree.begin(), tree.end(), 0).get()));
 
     tree.insert(std::find(tree.begin(), tree.end(), 0),
                 std::make_unique<TreeNode>(1),
                 std::make_unique<TreeNode>(2));
     CORRADE_VERIFY(checkSequence(tree, Containers::array({1, 0, 2})));
+    // TODO: for some reason std::equal does not work here
+    CORRADE_VERIFY(equal(tree, *std::find(tree.begin(), tree.end(), 0)));
 
     tree.insert(std::find(tree.begin(), tree.end(), 1),
                 std::make_unique<TreeNode>(3),
                 std::make_unique<TreeNode>(4));
     CORRADE_VERIFY(checkSequence(tree, Containers::array({3, 1, 4, 0, 2})));
+    CORRADE_VERIFY(equal(tree, *std::find(tree.begin(), tree.end(), 0)));
 
     tree.insert(std::find(tree.begin(), tree.end(), 2),
                 std::make_unique<TreeNode>(5),
                 std::make_unique<TreeNode>(6));
     CORRADE_VERIFY(checkSequence(tree, Containers::array({3, 1, 4, 0, 5, 2, 6})));
+    CORRADE_VERIFY(equal(tree, *std::find(tree.begin(), tree.end(), 0)));
 
     tree.insert(std::find(tree.begin(), tree.end(), 5),
                 std::make_unique<TreeNode>(7),
                 std::make_unique<TreeNode>(8));
     CORRADE_VERIFY(checkSequence(tree, Containers::array({3, 1, 4, 0, 7, 5, 8, 2, 6})));
+    CORRADE_VERIFY(equal(tree, *std::find(tree.begin(), tree.end(), 0)));
 }
 
 void BinaryTreeTest::MoveTree()

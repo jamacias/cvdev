@@ -3,6 +3,9 @@
 
 #include <memory>
 
+template<class Derived>
+class Node;
+
 template<class T>
 class BinaryTree
 {
@@ -64,7 +67,7 @@ public:
 
         iterator& operator++()
         {
-            node_ = next(node_);
+            node_ = Node<T>::next(node_);
             return *this;
         }
 
@@ -77,10 +80,10 @@ public:
         pointer node_ {nullptr};
     };
 
-    Iterator begin() { return root_ ? Iterator(leftMost(root_.get())) : end(); }
+    Iterator begin() { return root_ ? Iterator(Node<T>::leftMost(root_.get())) : end(); }
     Iterator end() { return Iterator(nullptr); }
 
-    constexpr ConstIterator begin() const { return root_ ? ConstIterator(leftMost(root_.get())) : end(); }
+    constexpr ConstIterator begin() const { return root_ ? ConstIterator(Node<T>::leftMost(root_.get())) : end(); }
     constexpr ConstIterator end() const { return ConstIterator(nullptr); }
 
     constexpr void insert(Iterator parent, std::unique_ptr<T> left, std::unique_ptr<T> right)
@@ -115,7 +118,7 @@ public:
         T* nextPtr {nullptr};
         do
         {
-            T* current = leftMost(node->parent_)->parent_;
+            T* current = Node<T>::leftMost(node->parent_)->parent_;
 
             if (current->left_)
                 current->left_ = nullptr;
@@ -124,7 +127,7 @@ public:
 
             size_ -= 2;
 
-            nextPtr = next(current);
+            nextPtr = Node<T>::next(current);
         } while (nextPtr != nullptr && nextPtr->isLeaf() && nextPtr != node->parent_);
 
         remove(Iterator(node->parent_->right_.get()));
@@ -165,38 +168,6 @@ public:
 private:
     std::unique_ptr<T> root_{nullptr};
     std::size_t size_{0};
-
-    static constexpr T* leftMost(T* const current)
-    {
-        CORRADE_INTERNAL_ASSERT(current != nullptr);
-        T* n =  current;
-        while (n->left_ != nullptr)
-        {
-            n = n->left_.get();
-        }
-
-        CORRADE_INTERNAL_ASSERT(n->isLeaf());
-
-        return n;
-    }
-
-    static constexpr T* next(const T* current)
-    {
-        CORRADE_INTERNAL_ASSERT(current != nullptr);
-        if (current->right_ != nullptr)
-        {
-            return leftMost(current->right_.get());
-        }
-
-        T* n = current->parent_;
-        while (n != nullptr && current == n->right_.get())
-        {
-            current = n;
-            n = n->parent_;
-        }
-
-        return n;
-    }
 };
 
 
@@ -230,10 +201,105 @@ public:
 
         return sibling;
     }
+
+    template<class I>
+    class iterator;
+    using Iterator = iterator<Derived>;
+    using ConstIterator = iterator<const Derived>;
+
+    template<class I>
+    class iterator
+    {
+    public:
+        using iterator_category = std::forward_iterator_tag;
+        using difference_type   = std::ptrdiff_t;
+        using value_type        = I;
+        using pointer           = value_type*;
+        using reference         = value_type&;
+        constexpr explicit iterator(pointer node) : node_(node){}
+
+        constexpr reference operator*() const
+        {
+            return *node_;
+        }
+
+        constexpr pointer operator->() const
+        {
+            return node_;
+        }
+
+        constexpr bool operator!=(const iterator& other) const
+        {
+            return node_ != other.node_;
+        }
+
+        iterator& operator++()
+        {
+            node_ = next(node_);
+            return *this;
+        }
+
+        constexpr pointer get() const
+        {
+            return node_;
+        }
+
+    private:
+        pointer node_ {nullptr};
+    };
+
+    Iterator begin() { return Iterator(leftMost(static_cast<Derived*>(this))); }
+    Iterator end() { return Iterator(nullptr); }
+
+    constexpr ConstIterator begin() const { return ConstIterator(leftMost(static_cast<const Derived*>(this))); }
+    constexpr ConstIterator end() const { return ConstIterator(nullptr); }
+
 protected:
     std::unique_ptr<Derived> left_{nullptr};
     std::unique_ptr<Derived> right_{nullptr};
     Derived* parent_{nullptr};
+
+private:
+    template <class T>
+    static constexpr T* leftMostImpl(T* const current)
+    {
+        CORRADE_INTERNAL_ASSERT(current != nullptr);
+        T* n =  current;
+        while (n->left_ != nullptr)
+        {
+            n = n->left_.get();
+        }
+
+        CORRADE_INTERNAL_ASSERT(n->isLeaf());
+
+        return n;
+    }
+    static constexpr Derived* leftMost(Derived* const current)
+    {
+        return leftMostImpl(current);
+    }
+    static constexpr const Derived* leftMost(const Derived* current)
+    {
+        return leftMostImpl(current);
+    }
+
+    static constexpr Derived* next(const Derived* current)
+    {
+        CORRADE_INTERNAL_ASSERT(current != nullptr);
+        if (current->right_ != nullptr)
+        {
+            return leftMost(current->right_.get());
+        }
+
+        Derived* n = current->parent_;
+        while (n != nullptr && current == n->right_.get())
+        {
+            current = n;
+            n = n->parent_;
+        }
+
+        return n;
+    }
 };
 
 #endif // CONTAINERS_BINARYTREE_H
