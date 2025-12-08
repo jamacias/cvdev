@@ -249,10 +249,10 @@ public:
     };
 
     Iterator begin() { return Iterator(leftMost(static_cast<Derived*>(this))); }
-    Iterator end() { return Iterator(nullptr); }
+    Iterator end() { return std::next(Iterator(rightMost(static_cast<Derived*>(this)))); }
 
     constexpr ConstIterator begin() const { return ConstIterator(leftMost(static_cast<const Derived*>(this))); }
-    constexpr ConstIterator end() const { return ConstIterator(nullptr); }
+    constexpr ConstIterator end() const { return std::next(ConstIterator(rightMost(static_cast<const Derived*>(this)))); }
 
 protected:
     std::unique_ptr<Derived> left_{nullptr};
@@ -260,6 +260,7 @@ protected:
     Derived* parent_{nullptr};
 
 private:
+    // TODO: move Impl classes to its own namespace
     template <class T>
     static constexpr T* leftMostImpl(T* const current)
     {
@@ -281,6 +282,29 @@ private:
     static constexpr const Derived* leftMost(const Derived* current)
     {
         return leftMostImpl(current);
+    }
+
+    template <class T>
+    static constexpr T* rightMostImpl(T* const current)
+    {
+        CORRADE_INTERNAL_ASSERT(current != nullptr);
+        T* n =  current;
+        while (n->right_ != nullptr)
+        {
+            n = n->right_.get();
+        }
+
+        CORRADE_INTERNAL_ASSERT(n->isLeaf());
+
+        return n;
+    }
+    static constexpr Derived* rightMost(Derived* const current)
+    {
+        return rightMostImpl(current);
+    }
+    static constexpr const Derived* rightMost(const Derived* current)
+    {
+        return rightMostImpl(current);
     }
 
     static constexpr Derived* next(const Derived* current)

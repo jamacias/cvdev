@@ -16,6 +16,7 @@ struct BinaryTreeTest : Corrade::TestSuite::Tester
     explicit BinaryTreeTest();
 
     void Size();
+    void NodeIteration();
     void Iteration();
     void MoveTree();
     void LeafAndRoot();
@@ -30,6 +31,7 @@ BinaryTreeTest::BinaryTreeTest()
 {
     addTests({&BinaryTreeTest::Size});
     addTests({&BinaryTreeTest::Iteration});
+    addTests({&BinaryTreeTest::NodeIteration});
     addTests({&BinaryTreeTest::MoveTree});
     addTests({&BinaryTreeTest::LeafAndRoot});
     addTests({&BinaryTreeTest::CutNode});
@@ -106,7 +108,8 @@ constexpr auto checkSequence = [](const Tree &tree, const Containers::ArrayView<
 };
 
 // Helper function similar to std::equal that also checks the size.
-constexpr auto equal = [](const Tree &tree, const TreeNode &node)->bool
+template<class T, class N>
+constexpr auto equal = [](const T &tree, const N &node)->bool
 {
     if (std::distance(tree.begin(), tree.end()) != std::distance(node.begin(), node.end()))
     {
@@ -208,6 +211,49 @@ void BinaryTreeTest::Size()
     CORRADE_VERIFY(checkSequence(tree, Containers::array({0})));
 }
 
+void BinaryTreeTest::NodeIteration()
+{
+    /*
+          0
+    */
+    Tree tree(std::make_unique<TreeNode>(0));
+    const auto zero = std::find(tree.begin(), tree.end(), 0);
+    // TODO: for some reason std::equal does not work here
+    CORRADE_VERIFY(equal<Tree, TreeNode>(tree, *zero));
+    CORRADE_VERIFY(equal<TreeNode, Containers::Array<TreeNode::Type>>(*zero, Containers::array({0})));
+
+    /*
+          0
+        /   \
+       1     2
+    */
+    tree.insert(zero,
+                std::make_unique<TreeNode>(1),
+                std::make_unique<TreeNode>(2));
+    CORRADE_VERIFY(equal<Tree, TreeNode>(tree, *zero));
+    const auto one = std::find(tree.begin(), tree.end(), 1);
+    CORRADE_VERIFY(equal<Tree, TreeNode>(tree, *zero));
+    CORRADE_VERIFY(equal<TreeNode, Containers::Array<TreeNode::Type>>(*zero, Containers::array({1, 0, 2})));
+    CORRADE_VERIFY(equal<TreeNode, Containers::Array<TreeNode::Type>>(*one, Containers::array({1})));
+
+    /*
+          0
+        /   \
+       1     2
+      / \
+     3   4
+    */
+    tree.insert(one,
+                std::make_unique<TreeNode>(3),
+                std::make_unique<TreeNode>(4));
+    CORRADE_VERIFY(equal<Tree, TreeNode>(tree, *zero));
+    
+    // Iterating from the node should not traverse the whole tree
+    CORRADE_VERIFY(equal<TreeNode, Containers::Array<TreeNode::Type>>(*one, Containers::array({3, 1, 4})));
+    const auto three = std::find(tree.begin(), tree.end(), 3);
+    CORRADE_VERIFY(equal<TreeNode, Containers::Array<TreeNode::Type>>(*three, Containers::array({3})));
+}
+
 void BinaryTreeTest::Iteration()
 {
     /*
@@ -223,32 +269,26 @@ void BinaryTreeTest::Iteration()
 
     Tree tree(std::make_unique<TreeNode>(0));
     CORRADE_VERIFY(checkSequence(tree, Containers::array({0})));
-    CORRADE_VERIFY(std::equal(tree.begin(), tree.end(), std::find(tree.begin(), tree.end(), 0).get()));
 
     tree.insert(std::find(tree.begin(), tree.end(), 0),
                 std::make_unique<TreeNode>(1),
                 std::make_unique<TreeNode>(2));
     CORRADE_VERIFY(checkSequence(tree, Containers::array({1, 0, 2})));
-    // TODO: for some reason std::equal does not work here
-    CORRADE_VERIFY(equal(tree, *std::find(tree.begin(), tree.end(), 0)));
 
     tree.insert(std::find(tree.begin(), tree.end(), 1),
                 std::make_unique<TreeNode>(3),
                 std::make_unique<TreeNode>(4));
     CORRADE_VERIFY(checkSequence(tree, Containers::array({3, 1, 4, 0, 2})));
-    CORRADE_VERIFY(equal(tree, *std::find(tree.begin(), tree.end(), 0)));
 
     tree.insert(std::find(tree.begin(), tree.end(), 2),
                 std::make_unique<TreeNode>(5),
                 std::make_unique<TreeNode>(6));
     CORRADE_VERIFY(checkSequence(tree, Containers::array({3, 1, 4, 0, 5, 2, 6})));
-    CORRADE_VERIFY(equal(tree, *std::find(tree.begin(), tree.end(), 0)));
 
     tree.insert(std::find(tree.begin(), tree.end(), 5),
                 std::make_unique<TreeNode>(7),
                 std::make_unique<TreeNode>(8));
     CORRADE_VERIFY(checkSequence(tree, Containers::array({3, 1, 4, 0, 7, 5, 8, 2, 6})));
-    CORRADE_VERIFY(equal(tree, *std::find(tree.begin(), tree.end(), 0)));
 }
 
 void BinaryTreeTest::MoveTree()
