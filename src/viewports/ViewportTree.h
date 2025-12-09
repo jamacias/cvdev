@@ -155,24 +155,21 @@ public:
         Utility::Debug{} << "New parent coords: " << newParent->getCoordinates();
 
         // Calculate the coordinates of the parent and distribute them to the children proportionally to their current values
-        // All the children coordinates should always sum to the coordinates of the parent
         const auto activeViewportParentCoords = activeViewport->parent_->getCoordinates();
         Utility::Debug{} << "Active viewport parent coords: " << activeViewportParentCoords;
-        // Divide the activeViewportParentCoords proportionally to each of the siblings
-        // TODO: maybe we need a factor that sets the relative degree of horizontal/vertical division from min()
-        CORRADE_INTERNAL_ASSERT(Math::join(activeViewport->getCoordinates(), activeViewport->sibling()->getCoordinates()) == activeViewportParentCoords);
-
+        
         // Calculate the resulting delta needed to be applied to every children (viewport). This is, the (absolute) difference between the sibling of the
         // viewport to be removed and its parent since the sum of both childrens must always be equal to that of its parent.
-        const Range2Di delta{Math::abs(activeViewportParentCoords.min() - activeViewport->sibling()->getCoordinates().min()),
-                             Math::abs(activeViewportParentCoords.max() - activeViewport->sibling()->getCoordinates().max())};
+        const auto activeViewportSibling = activeViewport->sibling();
+        const Range2Di delta{Math::abs(activeViewportParentCoords.min() - activeViewportSibling->getCoordinates().min()),
+                             Math::abs(activeViewportParentCoords.max() - activeViewportSibling->getCoordinates().max())};
         Utility::Debug{} << "Delta: " << delta;
 
         // Now we have to iterate all the children of the extracted viewport and recalculate their coordinates proportionally
-        activeViewport->sibling()->setCoordinates(activeViewportParentCoords);
-        for (auto &node : *activeViewport->sibling())
+        activeViewportSibling->setCoordinates(activeViewportParentCoords);
+        for (auto &node : *activeViewportSibling)
         {
-            if (&node == activeViewport->sibling()) // the coordinates of the sibling of the viewport to be removed are already set
+            if (&node == activeViewportSibling) // the coordinates of the sibling of the viewport to be removed are already set
                 continue;
 
             const auto originalCoords = node.getCoordinates();
@@ -182,7 +179,9 @@ public:
             node.setCoordinates(newCoords);
         }
 
-        auto extractedViewport = cut(Iterator(activeViewport->sibling()));
+        // Relayout the tree so that the sibling of the viewport to be removed is kept
+        // and linked to its grandfather.
+        auto extractedViewport = cut(Iterator(activeViewportSibling));
         cut(Iterator(activeViewport->parent_));
         cut(Iterator(activeViewport));
         insert(newParent, std::move(extractedViewport));
