@@ -111,6 +111,17 @@ public:
         // At the middle => move nodes and insert in the middle
     }
 
+    constexpr void insert(Iterator parent, std::unique_ptr<T> node)
+    {
+        CORRADE_INTERNAL_ASSERT(parent.get() && node);
+        CORRADE_ASSERT((parent->left_ && !parent->right_) || (!parent->left_ && parent->right_), "BinaryTree::insert(): the parent should only have one children. Use the other overloads if you only want to insert one node.", );
+
+        if (parent->left_)
+            insert(parent, nullptr, std::move(node));
+        else
+            insert(parent, std::move(node), nullptr);
+    }
+
     constexpr void remove(Iterator node)
     {
         if (!node.get()) return;
@@ -149,10 +160,12 @@ public:
         if (node->parent_->left_.get() == node.get()) // Node to cut is left
         {
             returnNode = std::move(node->parent_->left_);
+            --size_;
         }
         else if (node->parent_->right_.get() == node.get()) // Node to cut is right
         {
             returnNode = std::move(node->parent_->right_);
+            --size_;
         }
 
         node->parent_ = nullptr;

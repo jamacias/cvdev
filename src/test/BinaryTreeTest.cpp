@@ -399,8 +399,6 @@ void BinaryTreeTest::InsertNode()
           0
         /   \
        1     2
-      / \ 
-     3   4
     */
     Tree tree(std::make_unique<TreeNode>(0));
     const auto zero = std::find(tree.begin(), tree.end(), 0);
@@ -413,6 +411,17 @@ void BinaryTreeTest::InsertNode()
                 nullptr);
     CORRADE_COMPARE(tree.size(), 3);
     CORRADE_VERIFY(checkSequence(tree, Containers::array({1, 0, 2})));
+
+    /*
+    Cut 1 and insert 3 in its place:
+          0
+        /   \
+       3     2
+    */
+    tree.cut(std::find(tree.begin(), tree.end(), 1));
+    tree.insert(zero, std::make_unique<TreeNode>(3));
+    CORRADE_COMPARE(tree.size(), 3);
+    CORRADE_VERIFY(checkSequence(tree, Containers::array({3, 0, 2})));
 }
 
 void BinaryTreeTest::Siblings()
