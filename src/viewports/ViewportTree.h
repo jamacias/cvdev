@@ -3,8 +3,11 @@
 
 #include <Magnum/Math/Range.h>
 #include "../containers/BinaryTree.h"
-#include "AbstractViewport.h"
-#include <string>
+#include "Corrade/Utility/Assert.h"
+#include "Corrade/Utility/Debug.h"
+#include "Magnum/Magnum.h"
+#include <algorithm>
+#include <queue>
 
 using namespace Magnum;
 
@@ -78,6 +81,8 @@ private:
     Range2Di coordinates_;
     Range2D relativeCoordinates_ {{}, {1.0f, 1.0f}}; ///< Viewport relative to the current window size.
     PartitionDirection partition_ {PartitionDirection::NONE};
+    Range2D distribution_{{0.0, 0.0}, {1.0, 1.0}}; ///< Viewport relative to the parent. To retrieve the size w.r.t. the main window concatenate multiplications until the root
+    void distribute();
 
     [[nodiscard]] Range2D calculateRelativeCoordinates(const Range2Di &absoluteCoordinates, const Vector2i &windowSize) const;
     [[nodiscard]] Range2Di calculateCoordinates(const Range2D &relativeCoordinates, const Vector2i &windowSize) const;
@@ -138,57 +143,65 @@ public:
                std::make_unique<ViewportNode>(windowSize, Range2Di(viewport2)));
 
         parent->partition_ = direction;
+        if (direction == ViewportNode::PartitionDirection::HORIZONTAL)
+        {
+            parent->left_->distribution_ = {{0.0, 0.0}, {1.0, 0.5}};
+            parent->right_->distribution_ = {{0.0, 0.5}, {1.0, 1.0}};
+        }
+        else
+        {
+            parent->left_->distribution_ = {{0.0, 0.0}, {0.5, 1.0}};
+            parent->right_->distribution_ = {{0.5, 0.0}, {1.0, 1.0}};
+        }
     }
 
     void collapse([[maybe_unused]] const Vector2i& coordinates)
     {
-        Iterator activeViewport = findActiveViewport(coordinates);
-        CORRADE_INTERNAL_ASSERT(!activeViewport->isRoot());
-        CORRADE_INTERNAL_ASSERT(!activeViewport->parent_->isRoot());
-        CORRADE_INTERNAL_ASSERT(activeViewport->isLeaf());
+        Iterator viewportToBeCollapsed = findActiveViewport(coordinates);
+        CORRADE_INTERNAL_ASSERT(!viewportToBeCollapsed->isRoot());
+        CORRADE_INTERNAL_ASSERT(viewportToBeCollapsed->isLeaf());
 
-        Utility::Debug{} << "Active viewport coords: " << activeViewport->getCoordinates();
+        /*
+        Idea: reconnect the nodes and and go through the whole tree recalculating the coordinates (distribute)
+        */
 
-        const auto newParent = Iterator(activeViewport->parent_->parent_);
-        // newParent->print();
-
-        Utility::Debug{} << "New parent coords: " << newParent->getCoordinates();
-
-        // Calculate the coordinates of the parent and distribute them to the children proportionally to their current values
-        const auto activeViewportParentCoords = activeViewport->parent_->getCoordinates();
-        Utility::Debug{} << "Active viewport parent coords: " << activeViewportParentCoords;
-        
-        // Calculate the resulting delta needed to be applied to every children (viewport). This is, the (absolute) difference between the sibling of the
-        // viewport to be removed and its parent since the sum of both childrens must always be equal to that of its parent.
-        const auto activeViewportSibling = activeViewport->sibling();
-        const Range2Di delta{Math::abs(activeViewportParentCoords.min() - activeViewportSibling->getCoordinates().min()),
-                             Math::abs(activeViewportParentCoords.max() - activeViewportSibling->getCoordinates().max())};
-        Utility::Debug{} << "Delta: " << delta;
-
-        // Now we have to iterate all the children of the extracted viewport and recalculate their coordinates proportionally
-        activeViewportSibling->setCoordinates(activeViewportParentCoords);
-        for (auto &node : *activeViewportSibling)
+        const auto viewportToBeKept = viewportToBeCollapsed->sibling();
+        Iterator newParent = viewportToBeCollapsed->parent_->isRoot() ? Iterator(nullptr) : Iterator(viewportToBeCollapsed->parent_->parent_);
+        if (newParent.get())
         {
-            if (&node == activeViewportSibling) // the coordinates of the sibling of the viewport to be removed are already set
-                continue;
-
-            const auto originalCoords = node.getCoordinates();
-            const Range2Di newCoords{originalCoords.min() - delta.min(),
-                                     originalCoords.max() - delta.max()};
-            Utility::Debug{} << "New coords: " << newCoords << "; from: " << originalCoords;
-            node.setCoordinates(newCoords);
+            const auto newSiblingDistribution = viewportToBeCollapsed->parent_->sibling()->distribution_;
+            viewportToBeKept->distribution_ = {Vector2{1} - newSiblingDistribution.max(),
+                                               Vector2{1} - newSiblingDistribution.min()};
+        }
+        else // the new parent is the size of the root
+        {
+            viewportToBeKept->distribution_ = Range2D(Vector2{0.0f}, Vector2{1.0f});
         }
 
         // Relayout the tree so that the sibling of the viewport to be removed is kept
         // and linked to its grandfather.
-        auto extractedViewport = cut(Iterator(activeViewportSibling));
-        cut(Iterator(activeViewport->parent_));
-        cut(Iterator(activeViewport));
+        auto extractedViewport = cut(Iterator(viewportToBeKept));
+        cut(Iterator(viewportToBeCollapsed->parent_));
+        cut(Iterator(viewportToBeCollapsed));
         insert(newParent, std::move(extractedViewport));
 
-        Utility::Debug{} << "Leave collapse function";
+        // Since the tree is rearranged, the screen sizes have to be re-distributed.
+        // We do so level by level, otherwise we have to do many passes
+        std::queue<ViewportNode*> queue;
+        queue.push(root_.get());
+        while (!queue.empty())
+        {
+            auto node = queue.front();
+            node->distribute();
+            queue.pop();
+            if (node->left_)
+                queue.push(node->left_.get());
+            if (node->right_)
+                queue.push(node->right_.get());
+        }
 
-        CORRADE_INTERNAL_ASSERT(Math::join(newParent->left_->getCoordinates(), newParent->right_->getCoordinates()) == newParent->getCoordinates());
+        // CORRADE_INTERNAL_ASSERT(Math::join(newParent->left_->distribution_, newParent->right_->distribution_) == Range2D(Vector2{0.0f}, Vector2{1.0f}));
+        // CORRADE_INTERNAL_ASSERT(Math::join(newParent->left_->getCoordinates(), newParent->right_->getCoordinates()) == newParent->getCoordinates());
     }
 };
 

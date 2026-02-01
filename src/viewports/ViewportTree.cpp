@@ -1,4 +1,5 @@
 #include "ViewportTree.h"
+#include "Magnum/Magnum.h"
 
 ViewportNode::ViewportNode(const Vector2i &windowSize, const Range2Di &coordinates)
 {
@@ -48,6 +49,22 @@ ViewportNode& ViewportNode::setCoordinates(const Range2Di &coordinates)
 Range2Di ViewportNode::getCoordinates() const
 {
     return coordinates_;
+}
+
+void ViewportNode::distribute()
+{
+    if (isRoot())
+    {
+        CORRADE_INTERNAL_ASSERT(distribution_ == Range2D(Vector2{0.0f}, Vector2{1.0f}));
+        setCoordinates(Range2Di(Vector2i(0), windowSize_));
+
+        return;
+    }
+
+    const auto& parentCoordinates = parent_->coordinates_;
+    const Range2Di newCoordinates{Math::lerp(parentCoordinates.min(), parentCoordinates.max(), distribution_.min()),
+                                  Math::lerp(parentCoordinates.min(), parentCoordinates.max(), distribution_.max())};
+    setCoordinates(newCoordinates);
 }
 
 Range2D ViewportNode::calculateRelativeCoordinates(const Range2Di &absoluteViewport, const Vector2i &windowSize) const

@@ -113,7 +113,14 @@ public:
 
     constexpr void insert(Iterator parent, std::unique_ptr<T> node)
     {
-        CORRADE_INTERNAL_ASSERT(parent.get() && node);
+        // TODO: test inserting one node at the root
+        CORRADE_INTERNAL_ASSERT(node);
+        if (!parent.get())
+        {
+            root_ = std::move(node);
+            return;
+        }
+
         CORRADE_ASSERT((parent->left_ && !parent->right_) || (!parent->left_ && parent->right_), "BinaryTree::insert(): the parent should only have one children. Use the other overloads if you only want to insert one node.", );
 
         if (parent->left_)
@@ -178,8 +185,9 @@ public:
         return size_;
     }
 
-private:
+protected:
     std::unique_ptr<T> root_{nullptr};
+private:
     std::size_t size_{0};
 };
 
