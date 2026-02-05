@@ -17,8 +17,6 @@ using namespace Magnum;
 class ViewportNode;
 class ViewportTree;
 
-// TODO: move all the Ranges here
-// AbstractViewport shall have the pointers interaction instead and inherit from this
 class ViewportNode : private Node<ViewportNode>
 {
 public:
