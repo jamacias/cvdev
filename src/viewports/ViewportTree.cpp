@@ -1,10 +1,8 @@
 #include "ViewportTree.h"
 #include "Corrade/Utility/Assert.h"
-#include "Corrade/Utility/Debug.h"
 #include "Magnum/Magnum.h"
 #include "Magnum/Math/Functions.h"
 #include "Magnum/Math/Range.h"
-#include "Magnum/Math/TypeTraits.h"
 
 ViewportNode::ViewportNode(const Vector2i &windowSize, const Range2Di &coordinates)
 {
@@ -61,16 +59,11 @@ void ViewportNode::adjustPane(const Int distance)
     if (isRoot())
         return;
 
-    Utility::Debug{} << "[ViewportNode::adjustPane] -- Distance: " << distance;
-    Utility::Debug{} << "Original distribution: " << distribution_;
-    Utility::Debug{} << "Parent coords: " << parent_->coordinates_;
     const Vector2 deltaMask = distribution_.x().size() != 1.0f ? Vector2{1, 0} : Vector2{0, 1};
     const Vector2 distributionDelta = deltaMask * Math::lerpInverted(Vector2{parent_->coordinates_.min()}, Vector2{parent_->coordinates_.max()}, Vector2{static_cast<float>(distance)});
-    Utility::Debug{} << "distributionDelta: " << distributionDelta;
 
     const auto moveEdge = [](Range2D& distribution, const Float distance)
     {
-        Utility::Debug{} << "[moveEdge] distance: " << distance;
         if (auto& top = distribution.top();
             top != 0.0f && top != 1.0f)
         {
@@ -96,37 +89,9 @@ void ViewportNode::adjustPane(const Int distance)
             CORRADE_ASSERT_UNREACHABLE("[ViewportNode::adjustPane::moveEdge] Cannot move edges that are already at the borders.", {});
         }
     };
-    Utility::Debug{} << "Distribution: " << distribution_;
-    // moveEdge(distribution_, Math::select(distributionDelta.x(), distributionDelta.y(), 0));
+
     moveEdge(distribution_, distributionDelta.x() != 0.0f ? distributionDelta.x() : distributionDelta.y());
-    Utility::Debug{} << "Distribution: " << distribution_;
-
-    Utility::Debug{} << "Sibling distribution: " << sibling()->distribution_;
-    // moveEdge(sibling()->distribution_, Math::select(distributionDelta.x(), distributionDelta.y(), 0));
     moveEdge(sibling()->distribution_, distributionDelta.x() != 0.0f ? distributionDelta.x() : distributionDelta.y());
-    Utility::Debug{} << "Sibling distribution: " << sibling()->distribution_;
-
-    // TODO: calculate a scale factor?
-
-    // distribution_ = distribution_.translated(distributionDelta);
-    // distribution_ = {Math::max(distribution_.min(), Vector2{0.0f}),
-    //                  Math::min(distribution_.max(), Vector2{1.0f})};
-
-    // distribution_ = {Math::clamp(distribution_.min() + distributionDelta, 0.0f, 1.0f),
-    //                  Math::clamp(distribution_.max() + distributionDelta, 0.0f, 1.0f)};
-    // Utility::Debug{} << "Distribution: " << distribution_;
-
-    // TODO: instead of doing this clamp thingy, resize the range or pad the borders by the necessary amount?
-    // auto &siblingDistribution = sibling()->distribution_;
-    // siblingDistribution = siblingDistribution.translated(distributionDelta);
-    // siblingDistribution = {Math::max(siblingDistribution.min(), Vector2{0.0f}),
-    //                        Math::min(siblingDistribution.max(), Vector2{1.0f})};
-    // siblingDistribution = {Vector2{1} - distribution_.max(),
-    //                        Vector2{1} - distribution_.min()};
-    // siblingDistribution =  Math::intersect(distribution_, Range2D{Vector2{0.0f}, Vector2{1.0f}});
-    // siblingDistribution = {Math::clamp(siblingDistribution.min() + distributionDelta, 0.0f, 1.0f),
-    //                        Math::clamp(siblingDistribution.max() + distributionDelta, 0.0f, 1.0f)};
-    // Utility::Debug{} << "Sibling distribution: " << sibling()->distribution_;
 }
 
 void ViewportNode::distribute()

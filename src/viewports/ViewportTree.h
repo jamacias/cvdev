@@ -3,14 +3,11 @@
 
 #include <Magnum/Math/Range.h>
 #include "../containers/BinaryTree.h"
-#include "Corrade/Tags.h"
 #include "Corrade/Utility/Assert.h"
-#include "Corrade/Utility/Debug.h"
 #include "Magnum/Magnum.h"
 #include "Magnum/Math/Functions.h"
 #include "Magnum/Math/Vector.h"
 #include <algorithm>
-#include <cstddef>
 #include <queue>
 #include <Magnum/Math/Distance.h>
 
@@ -48,30 +45,6 @@ public:
 
     constexpr bool isVisible() const { return isLeaf(); }
 
-    void print() const
-    {
-        Utility::Debug{} << "this = " << this << "; &left = " << left_.get() << "; &right = " << right_.get() << "; &parent_ = " << parent_;
-    
-        /*
-             parent
-               |
-             data
-             /   \
-          left  right
-        */
-        // const auto printNodeIfValid = [](ViewportNode* const n)->const char*
-        //     {
-        //         Utility::Debug{} << n;
-        //         // return (n ? std::to_string(reinterpret_cast<uintptr_t>(n)).c_str() : "null");
-        //     };
-        Utility::Debug{} << "  " << parent_
-                         << "\n   |\n  "
-                         << this
-                         << "\n  / \\\n"
-                         << left_.get() << " " << right_.get()
-                         ;
-    }
-
     enum class PartitionDirection : uint8_t
     {
         NONE = 0,
@@ -98,7 +71,6 @@ private:
 template<class T>
 std::pair<T&, const ViewportNode::PartitionDirection> findClosestEdge(const Math::Vector2<T> & point, Math::Range2D<T>& coordinates)
 {
-    Utility::Debug{} << "[moveEdge] coordinates: " << coordinates;
     const auto leftDistance = Math::abs(coordinates.left() - point.x());
     const auto topDistance = Math::abs(coordinates.top() - point.y());
     const auto rightDistance = Math::abs(coordinates.right() - point.x());
@@ -108,26 +80,22 @@ std::pair<T&, const ViewportNode::PartitionDirection> findClosestEdge(const Math
         leftDistance < rightDistance &&
         leftDistance < bottomDistance)
     {
-        Utility::Debug{} << "Left is closest";
         return {coordinates.left(), ViewportNode::PartitionDirection::VERTICAL};
     }
     else if (topDistance < leftDistance &&
              topDistance < rightDistance &&
              topDistance < bottomDistance)
     {
-        Utility::Debug{} << "Top is closest";
         return {coordinates.top(), ViewportNode::PartitionDirection::HORIZONTAL};
     }
     else if (rightDistance < topDistance &&
              rightDistance < leftDistance &&
              rightDistance < bottomDistance)
     {
-        Utility::Debug{} << "Right is closest";
         return {coordinates.right(), ViewportNode::PartitionDirection::VERTICAL};
     }
     else
     {
-        Utility::Debug{} << "Bottom is closest";
         return {coordinates.bottom(), ViewportNode::PartitionDirection::HORIZONTAL};
     }
 }
@@ -230,6 +198,7 @@ public:
 
         // Since the tree is rearranged, the screen sizes have to be re-distributed.
         // We do so level by level, otherwise we have to do many passes
+        // TODO: use iterators once the BinaryTree class supports breadth-first search
         std::queue<ViewportNode*> queue;
         queue.push(root_.get());
         while (!queue.empty())
@@ -249,8 +218,6 @@ public:
 
     void adjust(const Vector2i& position, const Int distance)
     {
-        Utility::Debug{} << "\n[adjust] -- Position: " << position << "; distance: " << distance;
-
         const auto activeViewport = findActiveViewport(position);
         const auto edge = findClosestEdge(position, activeViewport->coordinates_);
         const auto partitionTarget = edge.second;
@@ -272,9 +239,9 @@ public:
             v = v->parent_;
         }
 
-        Utility::Debug{} << "For partition: " << static_cast<Int>(partitionTarget) << "; longest edge: " << longestEdge << "; node coords: " << longestEdgeViewport->coordinates_;
         longestEdgeViewport->adjustPane(distance);
 
+        // TODO: use iterators once the BinaryTree class supports breadth-first search
         std::queue<ViewportNode*> queue;
         queue.push(root_.get());
         while (!queue.empty())
@@ -287,11 +254,6 @@ public:
             if (node->right_)
                 queue.push(node->right_.get());
         }
-
-        // for (const auto& n : *this)
-        // {
-        //     Utility::Debug{} << n.coordinates_;
-        // }
     }
 };
 
