@@ -3,11 +3,16 @@
 
 #include <Magnum/Math/Range.h>
 #include "../containers/BinaryTree.h"
+#include "Corrade/Tags.h"
 #include "Corrade/Utility/Assert.h"
 #include "Corrade/Utility/Debug.h"
 #include "Magnum/Magnum.h"
+#include "Magnum/Math/Functions.h"
+#include "Magnum/Math/Vector.h"
 #include <algorithm>
+#include <cstddef>
 #include <queue>
+#include <Magnum/Math/Distance.h>
 
 using namespace Magnum;
 
@@ -38,6 +43,8 @@ public:
 
     ViewportNode& setCoordinates(const Range2Di &coordinates);
     Range2Di getCoordinates() const;
+
+    void adjustPane(const Int distance);
 
     constexpr bool isVisible() const { return isLeaf(); }
 
@@ -88,6 +95,42 @@ private:
     [[nodiscard]] Range2Di calculateCoordinates(const Range2D &relativeCoordinates, const Vector2i &windowSize) const;
 };
 
+template<class T>
+std::pair<T&, const ViewportNode::PartitionDirection> findClosestEdge(const Math::Vector2<T> & point, Math::Range2D<T>& coordinates)
+{
+    Utility::Debug{} << "[moveEdge] coordinates: " << coordinates;
+    const auto leftDistance = Math::abs(coordinates.left() - point.x());
+    const auto topDistance = Math::abs(coordinates.top() - point.y());
+    const auto rightDistance = Math::abs(coordinates.right() - point.x());
+    const auto bottomDistance = Math::abs(coordinates.bottom() - point.y());
+
+    if (leftDistance < topDistance &&
+        leftDistance < rightDistance &&
+        leftDistance < bottomDistance)
+    {
+        Utility::Debug{} << "Left is closest";
+        return {coordinates.left(), ViewportNode::PartitionDirection::VERTICAL};
+    }
+    else if (topDistance < leftDistance &&
+             topDistance < rightDistance &&
+             topDistance < bottomDistance)
+    {
+        Utility::Debug{} << "Top is closest";
+        return {coordinates.top(), ViewportNode::PartitionDirection::HORIZONTAL};
+    }
+    else if (rightDistance < topDistance &&
+             rightDistance < leftDistance &&
+             rightDistance < bottomDistance)
+    {
+        Utility::Debug{} << "Right is closest";
+        return {coordinates.right(), ViewportNode::PartitionDirection::VERTICAL};
+    }
+    else
+    {
+        Utility::Debug{} << "Bottom is closest";
+        return {coordinates.bottom(), ViewportNode::PartitionDirection::HORIZONTAL};
+    }
+}
 
 class ViewportTree : private BinaryTree<ViewportNode>
 {
@@ -202,6 +245,53 @@ public:
 
         // CORRADE_INTERNAL_ASSERT(Math::join(newParent->left_->distribution_, newParent->right_->distribution_) == Range2D(Vector2{0.0f}, Vector2{1.0f}));
         // CORRADE_INTERNAL_ASSERT(Math::join(newParent->left_->getCoordinates(), newParent->right_->getCoordinates()) == newParent->getCoordinates());
+    }
+
+    void adjust(const Vector2i& position, const Int distance)
+    {
+        Utility::Debug{} << "\n[adjust] -- Position: " << position << "; distance: " << distance;
+
+        const auto activeViewport = findActiveViewport(position);
+        const auto edge = findClosestEdge(position, activeViewport->coordinates_);
+        const auto partitionTarget = edge.second;
+
+        ViewportNode* v = activeViewport.get();
+        ViewportNode* longestEdgeViewport = v;
+        Int longestEdge = 0;
+        while (!v->isRoot())
+        {
+            if (!v->coordinates_.contains(position))
+                break;
+
+            const Int targetEdgeSize = partitionTarget == ViewportNode::PartitionDirection::HORIZONTAL ? v->coordinates_.sizeX() : v->coordinates_.sizeY();
+            if (longestEdge < targetEdgeSize)
+            {
+                longestEdgeViewport = v;
+                longestEdge = targetEdgeSize;
+            }
+            v = v->parent_;
+        }
+
+        Utility::Debug{} << "For partition: " << static_cast<Int>(partitionTarget) << "; longest edge: " << longestEdge << "; node coords: " << longestEdgeViewport->coordinates_;
+        longestEdgeViewport->adjustPane(distance);
+
+        std::queue<ViewportNode*> queue;
+        queue.push(root_.get());
+        while (!queue.empty())
+        {
+            auto node = queue.front();
+            node->distribute();
+            queue.pop();
+            if (node->left_)
+                queue.push(node->left_.get());
+            if (node->right_)
+                queue.push(node->right_.get());
+        }
+
+        // for (const auto& n : *this)
+        // {
+        //     Utility::Debug{} << n.coordinates_;
+        // }
     }
 };
 
