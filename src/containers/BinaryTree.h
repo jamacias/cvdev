@@ -20,9 +20,9 @@ public:
     }
 
     BinaryTree(const BinaryTree<T>&) = delete;
-    BinaryTree<T>(BinaryTree<T>&& other) { *this = std::move(other); }
-    BinaryTree<T>& operator=(const BinaryTree<T>&) = delete;
-    BinaryTree<T>& operator=(BinaryTree<T>&& other)
+    BinaryTree(BinaryTree<T>&& other) { *this = std::move(other); }
+    BinaryTree& operator=(const BinaryTree<T>&) = delete;
+    BinaryTree& operator=(BinaryTree<T>&& other)
     {
         root_ = std::move(other.root_);
         size_ = other.size_;
@@ -196,11 +196,11 @@ public:
     , parent_(nullptr)
     {
     }
-    Node(const Node<Derived>&)                      = delete;
-    Node<Derived>(Node<Derived>&& other)            = delete;
-    Node<Derived>& operator=(const Node<Derived>&)  = delete;
-    Node<Derived>& operator=(Node<Derived>&& other) = delete;
-    virtual ~Node()                                 = default;
+    Node(const Node<Derived>&)             = delete;
+    Node(Node<Derived>&& other)            = delete;
+    Node& operator=(const Node<Derived>&)  = delete;
+    Node& operator=(Node<Derived>&& other) = delete;
+    virtual ~Node()                        = default;
 
     constexpr bool     isRoot() const { return !parent_; }
     constexpr bool     isLeaf() const { return !left_ && !right_; }
