@@ -1,26 +1,26 @@
 #ifndef CONTAINERS_BINARYTREE_H
 #define CONTAINERS_BINARYTREE_H
 
+#include "Corrade/Utility/Assert.h"
+
 #include <memory>
 
-template<class Derived>
+template <class Derived>
 class Node;
 
-template<class T>
+template <class T>
 class BinaryTree
 {
 public:
     constexpr explicit BinaryTree(std::unique_ptr<T> root = nullptr)
     : root_(std::move(root))
     {
-        if (root_) size_++;
+        if (root_)
+            size_++;
     }
 
     BinaryTree(const BinaryTree<T>&) = delete;
-    BinaryTree<T>(BinaryTree<T>&& other)
-    {
-        *this = std::move(other);
-    }
+    BinaryTree<T>(BinaryTree<T>&& other) { *this = std::move(other); }
     BinaryTree<T>& operator=(const BinaryTree<T>&) = delete;
     BinaryTree<T>& operator=(BinaryTree<T>&& other)
     {
@@ -34,12 +34,12 @@ public:
     }
     virtual ~BinaryTree() = default;
 
-    template<class I>
+    template <class I>
     class iterator;
-    using Iterator = iterator<T>;
+    using Iterator      = iterator<T>;
     using ConstIterator = iterator<const T>;
 
-    template<class I>
+    template <class I>
     class iterator
     {
     public:
@@ -48,22 +48,16 @@ public:
         using value_type        = I;
         using pointer           = value_type*;
         using reference         = value_type&;
-        constexpr explicit iterator(pointer node) : node_(node){}
-
-        constexpr reference operator*() const
+        constexpr explicit iterator(pointer node)
+        : node_(node)
         {
-            return *node_;
         }
 
-        constexpr pointer operator->() const
-        {
-            return node_;
-        }
+        constexpr reference operator*() const { return *node_; }
 
-        constexpr bool operator!=(const iterator& other) const
-        {
-            return node_ != other.node_;
-        }
+        constexpr pointer operator->() const { return node_; }
+
+        constexpr bool operator!=(const iterator& other) const { return node_ != other.node_; }
 
         iterator& operator++()
         {
@@ -71,13 +65,10 @@ public:
             return *this;
         }
 
-        constexpr pointer get() const
-        {
-            return node_;
-        }
+        constexpr pointer get() const { return node_; }
 
     private:
-        pointer node_ {nullptr};
+        pointer node_{nullptr};
     };
 
     Iterator begin() { return root_ ? Iterator(Node<T>::leftMost(root_.get())) : end(); }
@@ -89,7 +80,8 @@ public:
     constexpr void insert(Iterator parent, std::unique_ptr<T> left, std::unique_ptr<T> right)
     {
         CORRADE_INTERNAL_ASSERT(parent.get() && (left || right));
-        CORRADE_ASSERT((left && !parent->left_) || (right && !parent->right_), "BinaryTree::insert(): the parent cannot already have children", );
+        CORRADE_ASSERT((left && !parent->left_) || (right && !parent->right_),
+                       "BinaryTree::insert(): the parent cannot already have children", );
         // At the bottom => append if it is a leaf
 
         if (left)
@@ -121,7 +113,9 @@ public:
             return;
         }
 
-        CORRADE_ASSERT((parent->left_ && !parent->right_) || (!parent->left_ && parent->right_), "BinaryTree::insert(): the parent should only have one children. Use the other overloads if you only want to insert one node.", );
+        CORRADE_ASSERT((parent->left_ && !parent->right_) || (!parent->left_ && parent->right_),
+                       "BinaryTree::insert(): the parent should only have one children. Use the other overloads if you "
+                       "only want to insert one node.", );
 
         if (parent->left_)
             insert(parent, nullptr, std::move(node));
@@ -131,9 +125,10 @@ public:
 
     constexpr void remove(Iterator node)
     {
-        if (!node.get()) return;
+        if (!node.get())
+            return;
 
-        T* nextPtr {nullptr};
+        T* nextPtr{nullptr};
         do
         {
             T* current = Node<T>::leftMost(node->parent_)->parent_;
@@ -159,11 +154,11 @@ public:
     constexpr std::unique_ptr<T> cut(Iterator node)
     {
         CORRADE_INTERNAL_ASSERT(node.get());
-        
+
         if (node->isRoot())
             return std::move(root_);
 
-        std::unique_ptr<T> returnNode {nullptr};
+        std::unique_ptr<T> returnNode{nullptr};
         if (node->parent_->left_.get() == node.get()) // Node to cut is left
         {
             returnNode = std::move(node->parent_->left_);
@@ -180,41 +175,40 @@ public:
         return returnNode;
     }
 
-    constexpr std::size_t size() const
-    {
-        return size_;
-    }
+    constexpr std::size_t size() const { return size_; }
 
 protected:
     std::unique_ptr<T> root_{nullptr};
+
 private:
     std::size_t size_{0};
 };
 
-
-template<class Derived>
+template <class Derived>
 class Node
 {
     friend BinaryTree<Derived>;
+
 public:
     constexpr explicit Node()
     : left_(nullptr)
     , right_(nullptr)
     , parent_(nullptr)
-    {}
-    Node(const Node<Derived>&) = delete;
-    Node<Derived>(Node<Derived>&& other) = delete;
-    Node<Derived>& operator=(const Node<Derived>&) = delete;
+    {
+    }
+    Node(const Node<Derived>&)                      = delete;
+    Node<Derived>(Node<Derived>&& other)            = delete;
+    Node<Derived>& operator=(const Node<Derived>&)  = delete;
     Node<Derived>& operator=(Node<Derived>&& other) = delete;
-    virtual ~Node() = default;
-    
-    constexpr bool isRoot() const { return !parent_; }
-    constexpr bool isLeaf() const { return !left_ && !right_; }
+    virtual ~Node()                                 = default;
+
+    constexpr bool     isRoot() const { return !parent_; }
+    constexpr bool     isLeaf() const { return !left_ && !right_; }
     constexpr Derived* sibling() const
     {
         CORRADE_INTERNAL_ASSERT(!isRoot());
 
-        Derived* sibling {nullptr};
+        Derived* sibling{nullptr};
         if (parent_->left_.get() == this)
             sibling = parent_->right_.get();
         else if (parent_->right_.get() == this)
@@ -223,12 +217,12 @@ public:
         return sibling;
     }
 
-    template<class I>
+    template <class I>
     class iterator;
-    using Iterator = iterator<Derived>;
+    using Iterator      = iterator<Derived>;
     using ConstIterator = iterator<const Derived>;
 
-    template<class I>
+    template <class I>
     class iterator
     {
     public:
@@ -237,22 +231,16 @@ public:
         using value_type        = I;
         using pointer           = value_type*;
         using reference         = value_type&;
-        constexpr explicit iterator(pointer node) : node_(node){}
-
-        constexpr reference operator*() const
+        constexpr explicit iterator(pointer node)
+        : node_(node)
         {
-            return *node_;
         }
 
-        constexpr pointer operator->() const
-        {
-            return node_;
-        }
+        constexpr reference operator*() const { return *node_; }
 
-        constexpr bool operator!=(const iterator& other) const
-        {
-            return node_ != other.node_;
-        }
+        constexpr pointer operator->() const { return node_; }
+
+        constexpr bool operator!=(const iterator& other) const { return node_ != other.node_; }
 
         iterator& operator++()
         {
@@ -260,25 +248,25 @@ public:
             return *this;
         }
 
-        constexpr pointer get() const
-        {
-            return node_;
-        }
+        constexpr pointer get() const { return node_; }
 
     private:
-        pointer node_ {nullptr};
+        pointer node_{nullptr};
     };
 
     Iterator begin() { return Iterator(leftMost(static_cast<Derived*>(this))); }
     Iterator end() { return std::next(Iterator(rightMost(static_cast<Derived*>(this)))); }
 
     constexpr ConstIterator begin() const { return ConstIterator(leftMost(static_cast<const Derived*>(this))); }
-    constexpr ConstIterator end() const { return std::next(ConstIterator(rightMost(static_cast<const Derived*>(this)))); }
+    constexpr ConstIterator end() const
+    {
+        return std::next(ConstIterator(rightMost(static_cast<const Derived*>(this))));
+    }
 
 protected:
     std::unique_ptr<Derived> left_{nullptr};
     std::unique_ptr<Derived> right_{nullptr};
-    Derived* parent_{nullptr};
+    Derived*                 parent_{nullptr};
 
 private:
     // TODO: move Impl classes to its own namespace
@@ -286,7 +274,7 @@ private:
     static constexpr T* leftMostImpl(T* const current)
     {
         CORRADE_INTERNAL_ASSERT(current != nullptr);
-        T* n =  current;
+        T* n = current;
         while (n->left_ != nullptr)
         {
             n = n->left_.get();
@@ -296,20 +284,14 @@ private:
 
         return n;
     }
-    static constexpr Derived* leftMost(Derived* const current)
-    {
-        return leftMostImpl(current);
-    }
-    static constexpr const Derived* leftMost(const Derived* current)
-    {
-        return leftMostImpl(current);
-    }
+    static constexpr Derived*       leftMost(Derived* const current) { return leftMostImpl(current); }
+    static constexpr const Derived* leftMost(const Derived* current) { return leftMostImpl(current); }
 
     template <class T>
     static constexpr T* rightMostImpl(T* const current)
     {
         CORRADE_INTERNAL_ASSERT(current != nullptr);
-        T* n =  current;
+        T* n = current;
         while (n->right_ != nullptr)
         {
             n = n->right_.get();
@@ -319,14 +301,8 @@ private:
 
         return n;
     }
-    static constexpr Derived* rightMost(Derived* const current)
-    {
-        return rightMostImpl(current);
-    }
-    static constexpr const Derived* rightMost(const Derived* current)
-    {
-        return rightMostImpl(current);
-    }
+    static constexpr Derived*       rightMost(Derived* const current) { return rightMostImpl(current); }
+    static constexpr const Derived* rightMost(const Derived* current) { return rightMostImpl(current); }
 
     static constexpr Derived* next(const Derived* current)
     {
@@ -340,7 +316,7 @@ private:
         while (n != nullptr && current == n->right_.get())
         {
             current = n;
-            n = n->parent_;
+            n       = n->parent_;
         }
 
         return n;
