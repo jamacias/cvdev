@@ -175,8 +175,8 @@ public:
         if (newParent.get())
         {
             const auto newSiblingDistribution = viewportToBeCollapsed->parent_->sibling()->distribution_;
-            viewportToBeKept->distribution_
-                = {Vector2{1} - newSiblingDistribution.max(), Vector2{1} - newSiblingDistribution.min()};
+            viewportToBeKept->distribution_   = {Vector2{1} - newSiblingDistribution.max(),
+                                                 Vector2{1} - newSiblingDistribution.min()};
         }
         else // the new parent is the size of the root
         {

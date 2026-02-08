@@ -72,8 +72,8 @@ public:
              /   \
           left  right
         */
-        const auto printNodeIfValid
-            = [](TreeNode* const n) -> const char* { return (n ? std::to_string(n->data).c_str() : "null"); };
+        const auto printNodeIfValid = [](TreeNode* const n) -> const char*
+        { return (n ? std::to_string(n->data).c_str() : "null"); };
         Utility::Debug{} << "  " << printNodeIfValid(parent_) << "\n   |\n  " << data << "\n  / \\\n"
                          << printNodeIfValid(left_.get()) << " " << printNodeIfValid(right_.get());
     }

@@ -60,10 +60,9 @@ void ViewportNode::adjustPane(const Int distance)
         return;
 
     const Vector2 deltaMask = distribution_.x().size() != 1.0f ? Vector2{1, 0} : Vector2{0, 1};
-    const Vector2 distributionDelta
-        = deltaMask
-          * Math::lerpInverted(Vector2{parent_->coordinates_.min()}, Vector2{parent_->coordinates_.max()},
-                               Vector2{static_cast<float>(distance)});
+    const Vector2 distributionDelta =
+        deltaMask * Math::lerpInverted(Vector2{parent_->coordinates_.min()}, Vector2{parent_->coordinates_.max()},
+                                       Vector2{static_cast<float>(distance)});
 
     const auto moveEdge = [](Range2D& distribution, const Float distance)
     {

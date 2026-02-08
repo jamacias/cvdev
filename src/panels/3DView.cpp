@@ -31,8 +31,8 @@ Float ThreeDView::depthAt(const Vector2& windowPosition) const
     /* First scale the position from being relative to window size to being
        relative to framebuffer size as those two can be different on HiDPI
        systems */
-    const Vector2i position
-        = windowPosition * applicationContext_.framebufferSize() / Vector2{applicationContext_.windowSize()};
+    const Vector2i position =
+        windowPosition * applicationContext_.framebufferSize() / Vector2{applicationContext_.windowSize()};
     const Vector2i fbPosition{position.x(), GL::defaultFramebuffer.viewport().sizeY() - position.y() - 1};
 
     GL::defaultFramebuffer.mapForRead(GL::DefaultFramebuffer::ReadAttachment::Front);
@@ -122,8 +122,10 @@ void ThreeDView::handlePointerMoveEvent(Platform::Application::PointerMoveEvent&
         /* Rotate around rotation point */
     }
     else
-        camera_->transformLocal(Matrix4::translation(rotationPoint_) * Matrix4::rotationX(-0.01_radf * delta.y())
-                                * Matrix4::rotationY(-0.01_radf * delta.x()) * Matrix4::translation(-rotationPoint_));
+        camera_->transformLocal(Matrix4::translation(rotationPoint_) *
+                                Matrix4::rotationX(-0.01_radf * delta.y()) *
+                                Matrix4::rotationY(-0.01_radf * delta.x()) *
+                                Matrix4::translation(-rotationPoint_));
 }
 
 void ThreeDView::handleScrollEvent(Platform::Application::ScrollEvent& event)

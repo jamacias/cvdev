@@ -4,8 +4,8 @@ ImagePreview::ImagePreview() {}
 
 void ImagePreview::draw()
 {
-    const ImGuiWindowFlags windowFlags
-        = {ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize};
+    const ImGuiWindowFlags windowFlags = {
+        ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize};
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::SetNextWindowSize(ImVec2(1280, 720));
 
