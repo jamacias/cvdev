@@ -21,23 +21,23 @@ class ViewportNode : private Node<ViewportNode>
 {
 public:
     explicit ViewportNode() = default;
-    explicit ViewportNode(const Vector2i &windowSize, const Range2Di &viewport = {});
-    virtual ~ViewportNode() = default;
-    ViewportNode(const ViewportNode&) = delete;
-    ViewportNode(ViewportNode&&) = delete;
+    explicit ViewportNode(const Vector2i& windowSize, const Range2Di& viewport = {});
+    virtual ~ViewportNode()                      = default;
+    ViewportNode(const ViewportNode&)            = delete;
+    ViewportNode(ViewportNode&&)                 = delete;
     ViewportNode& operator=(const ViewportNode&) = delete;
-    ViewportNode& operator=(ViewportNode&&) = delete;
+    ViewportNode& operator=(ViewportNode&&)      = delete;
 
     using Node<ViewportNode>::begin;
     using Node<ViewportNode>::end;
 
-    ViewportNode& setWindowSize(const Vector2i &size);
-    Vector2i getWindowSize() const;
+    ViewportNode& setWindowSize(const Vector2i& size);
+    Vector2i      getWindowSize() const;
 
-    ViewportNode& setRelativeCoordinates(const Range2D &coordinates);
+    ViewportNode& setRelativeCoordinates(const Range2D& coordinates);
 
-    ViewportNode& setCoordinates(const Range2Di &coordinates);
-    Range2Di getCoordinates() const;
+    ViewportNode& setCoordinates(const Range2Di& coordinates);
+    Range2Di      getCoordinates() const;
 
     void adjustPane(const Int distance);
 
@@ -55,40 +55,36 @@ private:
     friend BinaryTree<ViewportNode>;
     friend Node<ViewportNode>;
 
-    Vector2i windowSize_;
-    Range2Di coordinates_;
-    Range2D relativeCoordinates_ {{}, {1.0f, 1.0f}}; ///< Viewport relative to the current window size.
-    PartitionDirection partition_ {PartitionDirection::NONE};
-    Range2D distribution_{{0.0, 0.0}, {1.0, 1.0}}; ///< Viewport relative to the parent. To retrieve the size w.r.t. the main window concatenate multiplications until the root
-    void distribute();
+    Vector2i           windowSize_;
+    Range2Di           coordinates_;
+    Range2D            relativeCoordinates_{{}, {1.0f, 1.0f}}; ///< Viewport relative to the current window size.
+    Range2D            distribution_{{0.0, 0.0}, {1.0, 1.0}};  ///< How this viewport is distributed wrt to its parent.
+    PartitionDirection partition_{PartitionDirection::NONE};
+    void               distribute();
 
-    [[nodiscard]] Range2D calculateRelativeCoordinates(const Range2Di &absoluteCoordinates, const Vector2i &windowSize) const;
-    [[nodiscard]] Range2Di calculateCoordinates(const Range2D &relativeCoordinates, const Vector2i &windowSize) const;
+    [[nodiscard]] Range2D  calculateRelativeCoordinates(const Range2Di& absoluteCoordinates,
+                                                        const Vector2i& windowSize) const;
+    [[nodiscard]] Range2Di calculateCoordinates(const Range2D& relativeCoordinates, const Vector2i& windowSize) const;
 };
 
-template<class T>
-std::pair<T&, const ViewportNode::PartitionDirection> findClosestEdge(const Math::Vector2<T> & point, Math::Range2D<T>& coordinates)
+template <class T>
+std::pair<T&, const ViewportNode::PartitionDirection> findClosestEdge(const Math::Vector2<T>& point,
+                                                                      Math::Range2D<T>&       coordinates)
 {
-    const auto leftDistance = Math::abs(coordinates.left() - point.x());
-    const auto topDistance = Math::abs(coordinates.top() - point.y());
-    const auto rightDistance = Math::abs(coordinates.right() - point.x());
+    const auto leftDistance   = Math::abs(coordinates.left() - point.x());
+    const auto topDistance    = Math::abs(coordinates.top() - point.y());
+    const auto rightDistance  = Math::abs(coordinates.right() - point.x());
     const auto bottomDistance = Math::abs(coordinates.bottom() - point.y());
 
-    if (leftDistance < topDistance &&
-        leftDistance < rightDistance &&
-        leftDistance < bottomDistance)
+    if (leftDistance < topDistance && leftDistance < rightDistance && leftDistance < bottomDistance)
     {
         return {coordinates.left(), ViewportNode::PartitionDirection::VERTICAL};
     }
-    else if (topDistance < leftDistance &&
-             topDistance < rightDistance &&
-             topDistance < bottomDistance)
+    else if (topDistance < leftDistance && topDistance < rightDistance && topDistance < bottomDistance)
     {
         return {coordinates.top(), ViewportNode::PartitionDirection::HORIZONTAL};
     }
-    else if (rightDistance < topDistance &&
-             rightDistance < leftDistance &&
-             rightDistance < bottomDistance)
+    else if (rightDistance < topDistance && rightDistance < leftDistance && rightDistance < bottomDistance)
     {
         return {coordinates.right(), ViewportNode::PartitionDirection::VERTICAL};
     }
@@ -104,16 +100,15 @@ public:
     friend BinaryTree<ViewportNode>;
     friend Node<ViewportNode>;
 
-    explicit ViewportTree(const Vector2i &windowSize)
+    explicit ViewportTree(const Vector2i& windowSize)
     : BinaryTree(std::make_unique<ViewportNode>(windowSize))
     {
-
     }
-    virtual ~ViewportTree() = default;
-    ViewportTree(const ViewportTree&) = delete;
-    ViewportTree(ViewportTree&&) = delete;
+    virtual ~ViewportTree()                      = default;
+    ViewportTree(const ViewportTree&)            = delete;
+    ViewportTree(ViewportTree&&)                 = delete;
     ViewportTree& operator=(const ViewportTree&) = delete;
-    ViewportTree& operator=(ViewportTree&&) = delete;
+    ViewportTree& operator=(ViewportTree&&)      = delete;
 
     using BinaryTree<ViewportNode>::begin;
     using BinaryTree<ViewportNode>::end;
@@ -123,7 +118,7 @@ public:
         if ((coordinates < Vector2i{0}).all())
             return end();
 
-        return std::find_if(begin(), end(), [&](const ViewportNode &viewport)
+        return std::find_if(begin(), end(), [&](const ViewportNode& viewport)
                             { return viewport.getCoordinates().contains(coordinates) && viewport.isVisible(); });
     }
 
@@ -132,34 +127,33 @@ public:
         Iterator parent = findActiveViewport(coordinates);
 
         const auto parentViewport = parent->getCoordinates();
-        const auto windowSize = parent->getWindowSize();
+        const auto windowSize     = parent->getWindowSize();
 
         // Assume vertical partitioning and recalculate otherwise
         auto newViewportSize = parentViewport.size() / Vector2i(2, 1);
-        auto viewport1 = Range2Di::fromSize(parentViewport.bottomLeft(), newViewportSize);
-        auto viewport2 = Range2Di::fromSize(viewport1.bottomRight(), newViewportSize);
+        auto viewport1       = Range2Di::fromSize(parentViewport.bottomLeft(), newViewportSize);
+        auto viewport2       = Range2Di::fromSize(viewport1.bottomRight(), newViewportSize);
         if (direction == ViewportNode::PartitionDirection::HORIZONTAL)
         {
             newViewportSize = parentViewport.size() / Vector2i(1, 2);
-            viewport1 = Range2Di::fromSize(parentViewport.bottomLeft(), newViewportSize);
-            viewport2 = Range2Di::fromSize(viewport1.topLeft(), newViewportSize);
+            viewport1       = Range2Di::fromSize(parentViewport.bottomLeft(), newViewportSize);
+            viewport2       = Range2Di::fromSize(viewport1.topLeft(), newViewportSize);
         }
 
         CORRADE_INTERNAL_ASSERT(Math::join(viewport1, viewport2) == parentViewport);
 
-        insert(parent,
-               std::make_unique<ViewportNode>(windowSize, Range2Di(viewport1)),
+        insert(parent, std::make_unique<ViewportNode>(windowSize, Range2Di(viewport1)),
                std::make_unique<ViewportNode>(windowSize, Range2Di(viewport2)));
 
         parent->partition_ = direction;
         if (direction == ViewportNode::PartitionDirection::HORIZONTAL)
         {
-            parent->left_->distribution_ = {{0.0, 0.0}, {1.0, 0.5}};
+            parent->left_->distribution_  = {{0.0, 0.0}, {1.0, 0.5}};
             parent->right_->distribution_ = {{0.0, 0.5}, {1.0, 1.0}};
         }
         else
         {
-            parent->left_->distribution_ = {{0.0, 0.0}, {0.5, 1.0}};
+            parent->left_->distribution_  = {{0.0, 0.0}, {0.5, 1.0}};
             parent->right_->distribution_ = {{0.5, 0.0}, {1.0, 1.0}};
         }
     }
@@ -175,12 +169,14 @@ public:
         */
 
         const auto viewportToBeKept = viewportToBeCollapsed->sibling();
-        Iterator newParent = viewportToBeCollapsed->parent_->isRoot() ? Iterator(nullptr) : Iterator(viewportToBeCollapsed->parent_->parent_);
+        Iterator   newParent        = viewportToBeCollapsed->parent_->isRoot()
+                                          ? Iterator(nullptr)
+                                          : Iterator(viewportToBeCollapsed->parent_->parent_);
         if (newParent.get())
         {
             const auto newSiblingDistribution = viewportToBeCollapsed->parent_->sibling()->distribution_;
-            viewportToBeKept->distribution_ = {Vector2{1} - newSiblingDistribution.max(),
-                                               Vector2{1} - newSiblingDistribution.min()};
+            viewportToBeKept->distribution_
+                = {Vector2{1} - newSiblingDistribution.max(), Vector2{1} - newSiblingDistribution.min()};
         }
         else // the new parent is the size of the root
         {
@@ -216,23 +212,25 @@ public:
 
     void adjust(const Vector2i& position, const Int distance)
     {
-        const auto activeViewport = findActiveViewport(position);
-        const auto edge = findClosestEdge(position, activeViewport->coordinates_);
+        const auto activeViewport  = findActiveViewport(position);
+        const auto edge            = findClosestEdge(position, activeViewport->coordinates_);
         const auto partitionTarget = edge.second;
 
-        ViewportNode* v = activeViewport.get();
+        ViewportNode* v                   = activeViewport.get();
         ViewportNode* longestEdgeViewport = v;
-        Int longestEdge = 0;
+        Int           longestEdge         = 0;
         while (!v->isRoot())
         {
             if (!v->coordinates_.contains(position))
                 break;
 
-            const Int targetEdgeSize = partitionTarget == ViewportNode::PartitionDirection::HORIZONTAL ? v->coordinates_.sizeX() : v->coordinates_.sizeY();
+            const Int targetEdgeSize = partitionTarget == ViewportNode::PartitionDirection::HORIZONTAL
+                                           ? v->coordinates_.sizeX()
+                                           : v->coordinates_.sizeY();
             if (longestEdge < targetEdgeSize)
             {
                 longestEdgeViewport = v;
-                longestEdge = targetEdgeSize;
+                longestEdge         = targetEdgeSize;
             }
             v = v->parent_;
         }
