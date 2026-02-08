@@ -1,9 +1,10 @@
+#include "../viewports/AbstractViewport.h"
+
+#include <Corrade/Containers/Array.h>
+#include <Corrade/TestSuite/Tester.h>
+#include <Corrade/Utility/Debug.h>
 #include <algorithm>
 #include <string>
-#include <Corrade/TestSuite/Tester.h>
-#include "../viewports/AbstractViewport.h"
-#include <Corrade/Containers/Array.h>
-#include <Corrade/Utility/Debug.h>
 
 using namespace Corrade;
 

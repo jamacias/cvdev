@@ -1,15 +1,16 @@
 #ifndef VIEWPORTS_VIEWPORTTREE_H
 #define VIEWPORTS_VIEWPORTTREE_H
 
-#include <Magnum/Math/Range.h>
 #include "../containers/BinaryTree.h"
 #include "Corrade/Utility/Assert.h"
 #include "Magnum/Magnum.h"
 #include "Magnum/Math/Functions.h"
 #include "Magnum/Math/Vector.h"
+
+#include <Magnum/Math/Distance.h>
+#include <Magnum/Math/Range.h>
 #include <algorithm>
 #include <queue>
-#include <Magnum/Math/Distance.h>
 
 using namespace Magnum;
 

@@ -1,15 +1,16 @@
 #ifndef VIEWPORTS_VIEWPORTMANAGER_H
 #define VIEWPORTS_VIEWPORTMANAGER_H
 
-#include <memory>
-#include <optional>
+#include "../containers/BinaryTree.h"
+#include "../panels/3DView.h"
+
+#include <Magnum/GL/Mesh.h>
 #include <Magnum/Math/Range.h>
 #include <Magnum/Platform/GlfwApplication.h>
-#include <Magnum/GL/Mesh.h>
-#include <Magnum/Shaders/FlatGL.h>
 #include <Magnum/SceneGraph/Drawable.h>
-#include "../panels/3DView.h"
-#include "../containers/BinaryTree.h"
+#include <Magnum/Shaders/FlatGL.h>
+#include <memory>
+#include <optional>
 
 using namespace Magnum;
 class ViewportManager

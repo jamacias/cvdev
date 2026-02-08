@@ -1,17 +1,16 @@
-#include <Magnum/GL/DefaultFramebuffer.h>
-#include <Magnum/Platform/GlfwApplication.h>
-#include <Magnum/ImGuiIntegration/Context.hpp>
-#include <Magnum/SceneGraph/Camera.h>
-#include <Magnum/SceneGraph/Drawable.h>
-
-#include <memory>
-
-#include "traits/traits.h"
 #include "objects/Camera.h"
 #include "objects/Grid.h"
-#include "panels/ImagePreview.h"
 #include "panels/3DView.h"
+#include "panels/ImagePreview.h"
+#include "traits/traits.h"
 #include "viewports/ViewportManager.h"
+
+#include <Magnum/GL/DefaultFramebuffer.h>
+#include <Magnum/ImGuiIntegration/Context.hpp>
+#include <Magnum/Platform/GlfwApplication.h>
+#include <Magnum/SceneGraph/Camera.h>
+#include <Magnum/SceneGraph/Drawable.h>
+#include <memory>
 
 using namespace Magnum;
 

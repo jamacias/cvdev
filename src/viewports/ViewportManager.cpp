@@ -1,7 +1,8 @@
 #include "ViewportManager.h"
-#include <algorithm>
-#include <Corrade/Utility/Debug.h>
+
 #include <Corrade/Utility/Assert.h>
+#include <Corrade/Utility/Debug.h>
+#include <algorithm>
 
 ViewportManager::ViewportManager(const Platform::Application& applicationContext, const std::shared_ptr<Scene3D> scene)
 : applicationContext_(applicationContext)

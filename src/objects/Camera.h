@@ -2,6 +2,7 @@
 #define OBJECTS_CAMERA_H
 
 #include "../traits/traits.h"
+
 #include <Magnum/SceneGraph/Camera.h>
 
 using namespace Magnum;

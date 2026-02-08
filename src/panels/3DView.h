@@ -1,13 +1,14 @@
 #ifndef PANELS_3DVIEW_H
 #define PANELS_3DVIEW_H
 
-#include <memory>
+#include "../objects/Camera.h"
+
+#include <Magnum/GL/Mesh.h>
 #include <Magnum/Math/Range.h>
 #include <Magnum/Platform/GlfwApplication.h>
-#include <Magnum/GL/Mesh.h>
-#include <Magnum/Shaders/FlatGL.h>
 #include <Magnum/SceneGraph/Drawable.h>
-#include "../objects/Camera.h"
+#include <Magnum/Shaders/FlatGL.h>
+#include <memory>
 
 using namespace Magnum;
 class ThreeDView

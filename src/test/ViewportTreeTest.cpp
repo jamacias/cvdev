@@ -1,5 +1,6 @@
-#include <Corrade/TestSuite/Tester.h>
 #include "../viewports/ViewportTree.h"
+
+#include <Corrade/TestSuite/Tester.h>
 #include <Corrade/Utility/Debug.h>
 
 using namespace Corrade;

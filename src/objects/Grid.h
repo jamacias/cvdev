@@ -2,10 +2,11 @@
 #define OBJECTS_GRID_H
 
 #include "../traits/traits.h"
+
 #include <Magnum/GL/Mesh.h>
+#include <Magnum/SceneGraph/Camera.h>
 #include <Magnum/SceneGraph/Drawable.h>
 #include <Magnum/Shaders/FlatGL.h>
-#include <Magnum/SceneGraph/Camera.h>
 
 using namespace Magnum;
 

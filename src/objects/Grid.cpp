@@ -1,8 +1,8 @@
 #include "Grid.h"
 
-#include <Magnum/Primitives/Grid.h>
 #include <Magnum/Math/Color.h>
 #include <Magnum/MeshTools/Compile.h>
+#include <Magnum/Primitives/Grid.h>
 #include <Magnum/Trade/MeshData.h>
 
 Grid::Grid(Object3D& parent, SceneGraph::DrawableGroup3D& drawables)

@@ -1,12 +1,13 @@
 #ifndef VIEWPORTS_ABSTRACTVIEWPORT_H
 #define VIEWPORTS_ABSTRACTVIEWPORT_H
 
-#include <memory>
+#include "../containers/BinaryTree.h"
+#include "../traits/traits.h"
+
 #include <Magnum/Math/Range.h>
 #include <Magnum/Platform/GlfwApplication.h>
 #include <Magnum/SceneGraph/Drawable.h>
-#include "../traits/traits.h"
-#include "../containers/BinaryTree.h"
+#include <memory>
 
 using namespace Magnum;
 class AbstractViewport : public Node<AbstractViewport>

@@ -1,6 +1,8 @@
 #ifndef CONTAINERS_BINARYTREE_H
 #define CONTAINERS_BINARYTREE_H
 
+#include "Corrade/Utility/Assert.h"
+
 #include <memory>
 
 template <class Derived>

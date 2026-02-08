@@ -1,11 +1,10 @@
 #include "Application.h"
 
-#include <Magnum/GL/Renderer.h>
-#include <Magnum/MeshTools/Compile.h>
-
-#include <Magnum/Image.h>
 #include <Magnum/GL/PixelFormat.h>
+#include <Magnum/GL/Renderer.h>
+#include <Magnum/Image.h>
 #include <Magnum/Math/FunctionsBatch.h>
+#include <Magnum/MeshTools/Compile.h>
 #include <Magnum/Trade/MeshData.h>
 
 using namespace Magnum;

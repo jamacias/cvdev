@@ -45,4 +45,5 @@ QualifierAlignment: Left
 ReferenceAlignment: Left
 ReflowComments: IndentOnly
 SortIncludes:
-  Enabled: false
+  Enabled: true
+IncludeBlocks: Regroup
