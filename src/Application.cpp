@@ -10,16 +10,15 @@
 
 using namespace Magnum;
 
-CVDev::CVDev(const Arguments &arguments) : Platform::Application{arguments, NoCreate}
+CVDev::CVDev(const Arguments& arguments)
+: Platform::Application{arguments, NoCreate}
 {
     /* Try 8x MSAA, fall back to zero samples if not possible. Enable only 2x
        MSAA if we have enough DPI. */
     {
         const Vector2 dpiScaling = this->dpiScaling({});
         Configuration conf;
-        conf.setTitle("CVDev")
-            .setWindowFlags(Configuration::WindowFlag::Resizable)
-            .setSize({1280, 720}, dpiScaling);
+        conf.setTitle("CVDev").setWindowFlags(Configuration::WindowFlag::Resizable).setSize({1280, 720}, dpiScaling);
         GLConfiguration glConf;
         glConf.setSampleCount(dpiScaling.max() < 2.0f ? 8 : 2);
         if (!tryCreate(conf, glConf))
@@ -27,8 +26,7 @@ CVDev::CVDev(const Arguments &arguments) : Platform::Application{arguments, NoCr
     }
 
     using namespace Math::Literals;
-    imgui_ = ImGuiIntegration::Context(Vector2{windowSize()} / dpiScaling(),
-                                       windowSize(), framebufferSize());
+    imgui_ = ImGuiIntegration::Context(Vector2{windowSize()} / dpiScaling(), windowSize(), framebufferSize());
 
     GL::Renderer::enable(GL::Renderer::Feature::DepthTest);
     GL::Renderer::enable(GL::Renderer::Feature::FaceCulling);
@@ -36,14 +34,13 @@ CVDev::CVDev(const Arguments &arguments) : Platform::Application{arguments, NoCr
     /* Set up proper blending to be used by ImGui. There's a great chance
        you'll need this exact behavior for the rest of your scene. If not, set
        this only for the drawFrame() call. */
-    GL::Renderer::setBlendEquation(GL::Renderer::BlendEquation::Add,
-                                   GL::Renderer::BlendEquation::Add);
+    GL::Renderer::setBlendEquation(GL::Renderer::BlendEquation::Add, GL::Renderer::BlendEquation::Add);
     GL::Renderer::setBlendFunction(GL::Renderer::BlendFunction::SourceAlpha,
                                    GL::Renderer::BlendFunction::OneMinusSourceAlpha);
 
-    threeDView_ = std::make_unique<ThreeDView>(*this, scene_);
+    threeDView_  = std::make_unique<ThreeDView>(*this, scene_);
     threeDView1_ = std::make_unique<ThreeDView>(*this, scene_);
-    grid_ = std::make_unique<Grid>(*scene_, drawables_);
+    grid_        = std::make_unique<Grid>(*scene_, drawables_);
 
     imagePreview_ = std::make_unique<ImagePreview>();
 
@@ -53,9 +50,9 @@ CVDev::CVDev(const Arguments &arguments) : Platform::Application{arguments, NoCr
     viewportManager_->createNewViewport({1, 1}, ThreeDView::EBorder::BOTTOM);
 
     viewportManager_->createNewViewport({1, 1}, ThreeDView::EBorder::BOTTOM);
-    
+
     viewportManager_->createNewViewport({1, 600}, ThreeDView::EBorder::TOP);
-    
+
     viewportManager_->createNewViewport({1, 600}, ThreeDView::EBorder::RIGHT);
 
     // viewportManager_->createNewViewport({1200, 1});
@@ -67,16 +64,17 @@ void CVDev::drawEvent()
 
     imgui_.newFrame();
 
-    if(ImGui::GetIO().WantTextInput && !isTextInputActive())
+    if (ImGui::GetIO().WantTextInput && !isTextInputActive())
         startTextInput();
-    else if(!ImGui::GetIO().WantTextInput && isTextInputActive())
+    else if (!ImGui::GetIO().WantTextInput && isTextInputActive())
         stopTextInput();
 
     const ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize;
     ImGui::Begin("Test", nullptr, window_flags);
     ImGui::Text("Hello, world!");
     const ImGuiIO& io = ImGui::GetIO();
-    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", static_cast<double>(1000.0f / io.Framerate), static_cast<double>(io.Framerate));
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", static_cast<double>(1000.0f / io.Framerate),
+                static_cast<double>(io.Framerate));
     ImGui::End();
 
     // threeDView1_->setViewport(Range2Di({0, 0}, {windowSize().x()/2, windowSize().y()}));
@@ -107,27 +105,26 @@ void CVDev::drawEvent()
     redraw();
 }
 
-void CVDev::viewportEvent(ViewportEvent &event)
+void CVDev::viewportEvent(ViewportEvent& event)
 {
     GL::defaultFramebuffer.setViewport({{}, event.framebufferSize()});
 
-    imgui_.relayout(Vector2{event.windowSize()} / event.dpiScaling(),
-                    event.windowSize(), event.framebufferSize());
+    imgui_.relayout(Vector2{event.windowSize()} / event.dpiScaling(), event.windowSize(), event.framebufferSize());
 }
 
-void CVDev::keyPressEvent(KeyEvent &event)
+void CVDev::keyPressEvent(KeyEvent& event)
 {
     if (imgui_.handleKeyPressEvent(event))
         return;
 }
 
-void CVDev::keyReleaseEvent(KeyEvent &event)
+void CVDev::keyReleaseEvent(KeyEvent& event)
 {
     if (imgui_.handleKeyReleaseEvent(event))
         return;
 }
 
-void CVDev::pointerPressEvent(PointerEvent &event)
+void CVDev::pointerPressEvent(PointerEvent& event)
 {
     if (imgui_.handlePointerPressEvent(event))
         return;
@@ -137,7 +134,7 @@ void CVDev::pointerPressEvent(PointerEvent &event)
     // threeDView_->handlePointerPressEvent(event);
 }
 
-void CVDev::pointerReleaseEvent(PointerEvent &event)
+void CVDev::pointerReleaseEvent(PointerEvent& event)
 {
     if (imgui_.handlePointerReleaseEvent(event))
         return;
@@ -147,7 +144,7 @@ void CVDev::pointerReleaseEvent(PointerEvent &event)
     // threeDView1_->handlePointerReleaseEvent(event);
 }
 
-void CVDev::pointerMoveEvent(PointerMoveEvent &event)
+void CVDev::pointerMoveEvent(PointerMoveEvent& event)
 {
     if (imgui_.handlePointerMoveEvent(event))
         return;
@@ -157,7 +154,7 @@ void CVDev::pointerMoveEvent(PointerMoveEvent &event)
     // threeDView_->handlePointerMoveEvent(event);
 }
 
-void CVDev::scrollEvent(ScrollEvent &event)
+void CVDev::scrollEvent(ScrollEvent& event)
 {
     if (imgui_.handleScrollEvent(event))
     {
@@ -171,7 +168,7 @@ void CVDev::scrollEvent(ScrollEvent &event)
     // threeDView_->handleScrollEvent(event);
 }
 
-void CVDev::textInputEvent(TextInputEvent &event)
+void CVDev::textInputEvent(TextInputEvent& event)
 {
     if (imgui_.handleTextInputEvent(event))
         return;

@@ -9,7 +9,7 @@ using namespace Magnum;
 class Camera : public Object3D, public SceneGraph::Camera3D
 {
 public:
-    explicit Camera(Scene3D &scene);
+    explicit Camera(Scene3D& scene);
 };
 
 #endif // OBJECTS_CAMERA_H

@@ -3,7 +3,7 @@
 #include <Corrade/Utility/Debug.h>
 #include <Corrade/Utility/Assert.h>
 
-ViewportManager::ViewportManager(const Platform::Application &applicationContext, const std::shared_ptr<Scene3D> scene)
+ViewportManager::ViewportManager(const Platform::Application& applicationContext, const std::shared_ptr<Scene3D> scene)
 : applicationContext_(applicationContext)
 , scene_(scene)
 {
@@ -12,10 +12,10 @@ ViewportManager::ViewportManager(const Platform::Application &applicationContext
     CORRADE_INTERNAL_ASSERT(viewports_.size() == 1);
 }
 
-void ViewportManager::handlePointerPressEvent(Platform::Application::PointerEvent &event)
+void ViewportManager::handlePointerPressEvent(Platform::Application::PointerEvent& event)
 {
     // Check if you are close to the borders, if so, we want to move the edge of the viewport
-    const auto activeViewport = std::find_if(viewports_.begin(), viewports_.end(), [&](const auto &v)
+    const auto activeViewport = std::find_if(viewports_.begin(), viewports_.end(), [&](const auto& v)
                                              { return Range2D(v.getViewport()).contains(event.position()); });
 
     if (activeViewport == viewports_.end())
@@ -29,13 +29,13 @@ void ViewportManager::handlePointerPressEvent(Platform::Application::PointerEven
         borderInteractionViewport_ = &*activeViewport;
     }
 
-    for (auto &viewport : viewports_)
+    for (auto& viewport : viewports_)
     {
         viewport.handlePointerPressEvent(event);
     }
 }
 
-std::optional<ThreeDView::EBorder> ViewportManager::findBorder(const Range2Di &viewport, const Vector2 &position) const
+std::optional<ThreeDView::EBorder> ViewportManager::findBorder(const Range2Di& viewport, const Vector2& position) const
 {
     const Int borderActivationThreshold = 10; // px
     if (Math::abs(position.x() - viewport.left()) < borderActivationThreshold)
@@ -58,21 +58,21 @@ std::optional<ThreeDView::EBorder> ViewportManager::findBorder(const Range2Di &v
     return std::nullopt;
 }
 
-void ViewportManager::handlePointerReleaseEvent(Platform::Application::PointerEvent &event)
+void ViewportManager::handlePointerReleaseEvent(Platform::Application::PointerEvent& event)
 {
     if (activatedBorder_)
     {
-        activatedBorder_ = std::nullopt;
+        activatedBorder_           = std::nullopt;
         borderInteractionViewport_ = nullptr;
     }
 
-    for (auto &viewport : viewports_)
+    for (auto& viewport : viewports_)
     {
         viewport.handlePointerReleaseEvent(event);
     }
 }
 
-void ViewportManager::handlePointerMoveEvent(Platform::Application::PointerMoveEvent &event)
+void ViewportManager::handlePointerMoveEvent(Platform::Application::PointerMoveEvent& event)
 {
     if (activatedBorder_)
     {
@@ -92,34 +92,34 @@ void ViewportManager::handlePointerMoveEvent(Platform::Application::PointerMoveE
             newRange.top() = event.position().y();
         else if (border == ThreeDView::EBorder::BOTTOM)
             newRange.bottom() = event.position().y();
-        Debug {} << newRange;
+        Debug{} << newRange;
         borderInteractionViewport_->setViewport(newRange);
 
         return;
     }
 
-    for (auto &viewport : viewports_)
+    for (auto& viewport : viewports_)
     {
         viewport.handlePointerMoveEvent(event);
     }
 }
 
-void ViewportManager::handleScrollEvent(Platform::Application::ScrollEvent &event)
+void ViewportManager::handleScrollEvent(Platform::Application::ScrollEvent& event)
 {
-    for (auto &viewport : viewports_)
+    for (auto& viewport : viewports_)
     {
         viewport.handleScrollEvent(event);
     }
 }
 
-void ViewportManager::createNewViewport(const Vector2 &position, const ThreeDView::EBorder &direction)
+void ViewportManager::createNewViewport(const Vector2& position, const ThreeDView::EBorder& direction)
 {
     viewports_.reserve(viewports_.capacity() + 1);
 
     Range2Di newViewport;
     if (viewports_.empty())
     {
-        Debug {} << "No viewports found, create the first one";
+        Debug{} << "No viewports found, create the first one";
         newViewport = Range2Di::fromSize({0, 0}, applicationContext_.windowSize());
         // newViewport = Range2Di({0, applicationContext_.windowSize().y() / 3}, applicationContext_.windowSize());
     }
@@ -127,32 +127,32 @@ void ViewportManager::createNewViewport(const Vector2 &position, const ThreeDVie
     {
         // There should be an active viewport that has to be subdivided in two and then each
         // scaled/translated to their new position.
-        const auto activeViewport = std::find_if(viewports_.begin(), viewports_.end(), [&](const auto &v)
-                                           { return Range2D(v.getViewport()).contains(position); });
-        
-                                           
+        const auto activeViewport = std::find_if(viewports_.begin(), viewports_.end(), [&](const auto& v)
+                                                 { return Range2D(v.getViewport()).contains(position); });
+
         CORRADE_INTERNAL_ASSERT(activeViewport != viewports_.end());
-        
+
         const auto activeViewportRange = Range2D(activeViewport->getViewport());
 
         Vector2 newViewportSize;
         Vector2 newViewportTranslationFactor;
         if (direction == ThreeDView::EBorder::RIGHT || direction == ThreeDView::EBorder::LEFT)
         {
-            newViewportSize = activeViewportRange.scaled({0.5, 1.0}).size();
+            newViewportSize              = activeViewportRange.scaled({0.5, 1.0}).size();
             newViewportTranslationFactor = Vector2{1.0, 0.0};
         }
         else // == direction is top or bottom
         {
-            newViewportSize = activeViewportRange.scaled({1.0, 0.5}).size();
+            newViewportSize              = activeViewportRange.scaled({1.0, 0.5}).size();
             newViewportTranslationFactor = Vector2{0.0, 1.0};
         }
 
         activeViewport->setViewport(Range2Di(Range2D::fromSize(activeViewportRange.min(), newViewportSize)));
-        newViewport = Range2Di(Range2D::fromSize(activeViewportRange.translated(newViewportSize * newViewportTranslationFactor).min(), newViewportSize));
+        newViewport = Range2Di(Range2D::fromSize(
+            activeViewportRange.translated(newViewportSize * newViewportTranslationFactor).min(), newViewportSize));
     }
 
-    Debug {} << "New viewport: " << newViewport << ", direction: " << ThreeDView::to_string(direction);
+    Debug{} << "New viewport: " << newViewport << ", direction: " << ThreeDView::to_string(direction);
 
     auto newView = ThreeDView(applicationContext_, scene_);
     newView.setViewport(newViewport);
@@ -160,9 +160,9 @@ void ViewportManager::createNewViewport(const Vector2 &position, const ThreeDVie
     viewports_.emplace_back(std::move(newView));
 }
 
-void ViewportManager::draw(SceneGraph::DrawableGroup3D &drawables)
+void ViewportManager::draw(SceneGraph::DrawableGroup3D& drawables)
 {
-    for (auto &viewport : viewports_)
+    for (auto& viewport : viewports_)
     {
         viewport.draw(drawables);
     }
