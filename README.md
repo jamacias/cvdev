@@ -11,8 +11,16 @@ At the moment it looks like this:
 ## Building
 
 ```bash
-mkdir build
-cd build
-cmake ..
-make
+cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+cmake --build build -j16
 ```
+
+## Running tests
+
+Run all tests with `ctest`:
+
+```bash
+ctest --test-dir build/src/test/
+```
+
+Or the individual tests in the binary folder (e.g., `build/bin/`).
