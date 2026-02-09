@@ -187,8 +187,11 @@ public:
         // Relayout the tree so that the sibling of the viewport to be removed is kept
         // and linked to its grandfather.
         auto extractedViewport = cut(Iterator(viewportToBeKept));
-        cut(Iterator(viewportToBeCollapsed->parent_));
-        cut(Iterator(viewportToBeCollapsed));
+        // TODO: we have to keep the unique ptrs because otherwise we get a segfault during insertion
+        //       if compiled with optimizations. Maybe this can be improved when BinaryTree supports
+        //       swapping nodes :/
+        const auto nodeToBeReplaced  = cut(Iterator(viewportToBeCollapsed->parent_));
+        const auto collapsedViewport = cut(viewportToBeCollapsed);
         insert(newParent, std::move(extractedViewport));
 
         // Since the tree is rearranged, the screen sizes have to be re-distributed.
