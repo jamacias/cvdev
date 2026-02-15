@@ -28,7 +28,7 @@ ViewportTreeTest::ViewportTreeTest()
     addTests({&ViewportTreeTest::PaneAdjustment});
 }
 
-const auto print = [](const ViewportTree& tree) -> void
+const auto print = [](const ViewportTree<ViewportNode>& tree) -> void
 {
     for (const auto& v : tree)
     {
@@ -71,7 +71,7 @@ void ViewportTreeTest::BasicPartition()
     // |           1           |
     // |                       |
     // +-----------------------+
-    ViewportTree tree(windowSize);
+    ViewportTree<ViewportNode> tree(windowSize);
     CORRADE_COMPARE(tree.findActiveViewport({50, 50})->getCoordinates(), // 1
                     Range2Di({}, windowSize));
 
@@ -119,8 +119,8 @@ void ViewportTreeTest::BasicPartition()
 void ViewportTreeTest::Partition()
 {
     CORRADE_COMPARE(1, 1);
-    const Vector2i windowSize(1000, 800);
-    ViewportTree   tree(windowSize);
+    const Vector2i             windowSize(1000, 800);
+    ViewportTree<ViewportNode> tree(windowSize);
 
     // o-----------------------+
     // |           |           |
@@ -235,7 +235,7 @@ void ViewportTreeTest::PaneAdjustment()
     // |           1           |
     // |                       |
     // +-----------------------+
-    ViewportTree tree(windowSize);
+    ViewportTree<ViewportNode> tree(windowSize);
     CORRADE_COMPARE(tree.findActiveViewport({50, 50})->getCoordinates(), // 1
                     Range2Di({}, windowSize));
 

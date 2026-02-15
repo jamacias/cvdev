@@ -16,9 +16,10 @@ using namespace Magnum;
 
 // Forward declarations
 class ViewportNode;
+template <class ViewportType>
 class ViewportTree;
 
-class ViewportNode : private Node<ViewportNode>
+class ViewportNode : public Node<ViewportNode>
 {
 public:
     explicit ViewportNode() = default;
@@ -52,7 +53,7 @@ public:
     };
 
 private:
-    friend ViewportTree;
+    friend ViewportTree<ViewportNode>;
     friend BinaryTree<ViewportNode>;
     friend Node<ViewportNode>;
 
@@ -95,14 +96,15 @@ std::pair<T&, const ViewportNode::PartitionDirection> findClosestEdge(const Math
     }
 }
 
-class ViewportTree : private BinaryTree<ViewportNode>
+template <class ViewportType>
+class ViewportTree : private BinaryTree<ViewportType>
 {
 public:
-    friend BinaryTree<ViewportNode>;
-    friend Node<ViewportNode>;
+    friend BinaryTree<ViewportType>;
+    friend Node<ViewportType>;
 
     explicit ViewportTree(const Vector2i& windowSize)
-    : BinaryTree(std::make_unique<ViewportNode>(windowSize))
+    : BinaryTree<ViewportType>(std::make_unique<ViewportType>(windowSize))
     {
     }
     virtual ~ViewportTree()                      = default;
@@ -111,21 +113,21 @@ public:
     ViewportTree& operator=(const ViewportTree&) = delete;
     ViewportTree& operator=(ViewportTree&&)      = delete;
 
-    using BinaryTree<ViewportNode>::begin;
-    using BinaryTree<ViewportNode>::end;
+    using BinaryTree<ViewportType>::begin;
+    using BinaryTree<ViewportType>::end;
 
-    Iterator findActiveViewport(const Vector2i& coordinates)
+    BinaryTree<ViewportType>::Iterator findActiveViewport(const Vector2i& coordinates)
     {
         if ((coordinates < Vector2i{0}).all())
-            return end();
+            return BinaryTree<ViewportType>::end();
 
-        return std::find_if(begin(), end(), [&](const ViewportNode& viewport)
+        return std::find_if(begin(), end(), [&](const ViewportType& viewport)
                             { return viewport.getCoordinates().contains(coordinates) && viewport.isVisible(); });
     }
 
     void divide(const Vector2i& coordinates, const ViewportNode::PartitionDirection& direction)
     {
-        Iterator parent = findActiveViewport(coordinates);
+        auto parent = findActiveViewport(coordinates);
 
         const auto parentViewport = parent->getCoordinates();
         const auto windowSize     = parent->getWindowSize();
@@ -143,8 +145,8 @@ public:
 
         CORRADE_INTERNAL_ASSERT(Math::join(viewport1, viewport2) == parentViewport);
 
-        insert(parent, std::make_unique<ViewportNode>(windowSize, Range2Di(viewport1)),
-               std::make_unique<ViewportNode>(windowSize, Range2Di(viewport2)));
+        BinaryTree<ViewportType>::insert(parent, std::make_unique<ViewportType>(windowSize, Range2Di(viewport1)),
+                                         std::make_unique<ViewportType>(windowSize, Range2Di(viewport2)));
 
         parent->partition_ = direction;
         if (direction == ViewportNode::PartitionDirection::HORIZONTAL)
@@ -161,7 +163,7 @@ public:
 
     void collapse([[maybe_unused]] const Vector2i& coordinates)
     {
-        Iterator viewportToBeCollapsed = findActiveViewport(coordinates);
+        auto viewportToBeCollapsed = findActiveViewport(coordinates);
         CORRADE_INTERNAL_ASSERT(!viewportToBeCollapsed->isRoot());
         CORRADE_INTERNAL_ASSERT(viewportToBeCollapsed->isLeaf());
 
@@ -170,9 +172,9 @@ public:
         */
 
         const auto viewportToBeKept = viewportToBeCollapsed->sibling();
-        Iterator   newParent        = viewportToBeCollapsed->parent_->isRoot()
-                                          ? Iterator(nullptr)
-                                          : Iterator(viewportToBeCollapsed->parent_->parent_);
+        auto newParent = viewportToBeCollapsed->parent_->isRoot()
+                             ? typename BinaryTree<ViewportType>::Iterator(nullptr)
+                             : typename BinaryTree<ViewportType>::Iterator(viewportToBeCollapsed->parent_->parent_);
         if (newParent.get())
         {
             const auto newSiblingDistribution = viewportToBeCollapsed->parent_->sibling()->distribution_;
@@ -186,19 +188,21 @@ public:
 
         // Relayout the tree so that the sibling of the viewport to be removed is kept
         // and linked to its grandfather.
-        auto extractedViewport = cut(Iterator(viewportToBeKept));
+        auto extractedViewport =
+            BinaryTree<ViewportType>::cut(typename BinaryTree<ViewportType>::Iterator(viewportToBeKept));
         // TODO: we have to keep the unique ptrs because otherwise we get a segfault during insertion
         //       if compiled with optimizations. Maybe this can be improved when BinaryTree supports
         //       swapping nodes :/
-        const auto nodeToBeReplaced  = cut(Iterator(viewportToBeCollapsed->parent_));
-        const auto collapsedViewport = cut(viewportToBeCollapsed);
-        insert(newParent, std::move(extractedViewport));
+        const auto nodeToBeReplaced =
+            BinaryTree<ViewportType>::cut(typename BinaryTree<ViewportType>::Iterator(viewportToBeCollapsed->parent_));
+        const auto collapsedViewport = BinaryTree<ViewportType>::cut(viewportToBeCollapsed);
+        BinaryTree<ViewportType>::insert(newParent, std::move(extractedViewport));
 
         // Since the tree is rearranged, the screen sizes have to be re-distributed.
         // We do so level by level, otherwise we have to do many passes
         // TODO: use iterators once the BinaryTree class supports breadth-first search
-        std::queue<ViewportNode*> queue;
-        queue.push(root_.get());
+        std::queue<ViewportType*> queue;
+        queue.push(this->root_.get());
         while (!queue.empty())
         {
             auto node = queue.front();
@@ -242,8 +246,8 @@ public:
         longestEdgeViewport->adjustPane(distance);
 
         // TODO: use iterators once the BinaryTree class supports breadth-first search
-        std::queue<ViewportNode*> queue;
-        queue.push(root_.get());
+        std::queue<ViewportType*> queue;
+        queue.push(this->root_.get());
         while (!queue.empty())
         {
             auto node = queue.front();
