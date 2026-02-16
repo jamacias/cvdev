@@ -102,8 +102,9 @@ public:
     friend BinaryTree<ViewportType>;
     friend Node<ViewportType>;
 
-    explicit ViewportTree(const Vector2i& windowSize)
-    : BinaryTree<ViewportType>(std::make_unique<ViewportType>(windowSize))
+    template<typename... Args>
+    explicit ViewportTree(Args&&... args)
+    : BinaryTree<ViewportType>(std::make_unique<ViewportType>(std::forward<Args>(args)...))
     {
     }
     virtual ~ViewportTree()                      = default;
