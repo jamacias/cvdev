@@ -19,6 +19,13 @@ class ViewportNode;
 template <class ViewportType>
 class ViewportTree;
 
+enum class PartitionDirection : uint8_t
+{
+    NONE = 0,
+    HORIZONTAL,
+    VERTICAL
+};
+
 class ViewportNode : public Node<ViewportNode>
 {
 public:
@@ -45,13 +52,6 @@ public:
 
     constexpr bool isVisible() const { return isLeaf(); }
 
-    enum class PartitionDirection : uint8_t
-    {
-        NONE = 0,
-        HORIZONTAL,
-        VERTICAL
-    };
-
 private:
     friend ViewportTree<ViewportNode>;
     friend BinaryTree<ViewportNode>;
@@ -70,8 +70,7 @@ private:
 };
 
 template <class T>
-std::pair<T&, const ViewportNode::PartitionDirection> findClosestEdge(const Math::Vector2<T>& point,
-                                                                      Math::Range2D<T>&       coordinates)
+std::pair<T&, const PartitionDirection> findClosestEdge(const Math::Vector2<T>& point, Math::Range2D<T>& coordinates)
 {
     const auto leftDistance   = Math::abs(coordinates.left() - point.x());
     const auto topDistance    = Math::abs(coordinates.top() - point.y());
@@ -80,19 +79,19 @@ std::pair<T&, const ViewportNode::PartitionDirection> findClosestEdge(const Math
 
     if (leftDistance < topDistance && leftDistance < rightDistance && leftDistance < bottomDistance)
     {
-        return {coordinates.left(), ViewportNode::PartitionDirection::VERTICAL};
+        return {coordinates.left(), PartitionDirection::VERTICAL};
     }
     else if (topDistance < leftDistance && topDistance < rightDistance && topDistance < bottomDistance)
     {
-        return {coordinates.top(), ViewportNode::PartitionDirection::HORIZONTAL};
+        return {coordinates.top(), PartitionDirection::HORIZONTAL};
     }
     else if (rightDistance < topDistance && rightDistance < leftDistance && rightDistance < bottomDistance)
     {
-        return {coordinates.right(), ViewportNode::PartitionDirection::VERTICAL};
+        return {coordinates.right(), PartitionDirection::VERTICAL};
     }
     else
     {
-        return {coordinates.bottom(), ViewportNode::PartitionDirection::HORIZONTAL};
+        return {coordinates.bottom(), PartitionDirection::HORIZONTAL};
     }
 }
 
@@ -125,7 +124,7 @@ public:
                             { return viewport.getCoordinates().contains(coordinates) && viewport.isVisible(); });
     }
 
-    void divide(const Vector2i& coordinates, const ViewportNode::PartitionDirection& direction)
+    void divide(const Vector2i& coordinates, const PartitionDirection& direction)
     {
         auto parent = findActiveViewport(coordinates);
 
@@ -136,7 +135,7 @@ public:
         auto newViewportSize = parentViewport.size() / Vector2i(2, 1);
         auto viewport1       = Range2Di::fromSize(parentViewport.bottomLeft(), newViewportSize);
         auto viewport2       = Range2Di::fromSize(viewport1.bottomRight(), newViewportSize);
-        if (direction == ViewportNode::PartitionDirection::HORIZONTAL)
+        if (direction == PartitionDirection::HORIZONTAL)
         {
             newViewportSize = parentViewport.size() / Vector2i(1, 2);
             viewport1       = Range2Di::fromSize(parentViewport.bottomLeft(), newViewportSize);
@@ -149,7 +148,7 @@ public:
                                          std::make_unique<ViewportType>(windowSize, Range2Di(viewport2)));
 
         parent->partition_ = direction;
-        if (direction == ViewportNode::PartitionDirection::HORIZONTAL)
+        if (direction == PartitionDirection::HORIZONTAL)
         {
             parent->left_->distribution_  = {{0.0, 0.0}, {1.0, 0.5}};
             parent->right_->distribution_ = {{0.0, 0.5}, {1.0, 1.0}};
@@ -232,7 +231,7 @@ public:
             if (!v->coordinates_.contains(position))
                 break;
 
-            const Int targetEdgeSize = partitionTarget == ViewportNode::PartitionDirection::HORIZONTAL
+            const Int targetEdgeSize = partitionTarget == PartitionDirection::HORIZONTAL
                                            ? v->coordinates_.sizeX()
                                            : v->coordinates_.sizeY();
             if (longestEdge < targetEdgeSize)

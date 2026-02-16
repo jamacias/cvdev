@@ -80,7 +80,7 @@ void ViewportTreeTest::BasicPartition()
     // |     1     |     2     |
     // |           |           |
     // +-----------------------+
-    tree.divide({100, 100}, ViewportNode::PartitionDirection::VERTICAL);
+    tree.divide({100, 100}, PartitionDirection::VERTICAL);
     CORRADE_COMPARE(tree.findActiveViewport({50, 50})->getCoordinates(), // 1
                     Range2Di({}, {windowSize.x() / 2, windowSize.y()}));
     CORRADE_COMPARE(tree.findActiveViewport({750, 50})->getCoordinates(), // 2
@@ -100,7 +100,7 @@ void ViewportTreeTest::BasicPartition()
     // |-----------------------|
     // |           3           |
     // +-----------------------+
-    tree.divide({50, 50}, ViewportNode::PartitionDirection::HORIZONTAL);
+    tree.divide({50, 50}, PartitionDirection::HORIZONTAL);
     CORRADE_COMPARE(tree.findActiveViewport({50, 50})->getCoordinates(), // 2
                     Range2Di({}, {windowSize.x(), windowSize.y() / 2}));
     CORRADE_COMPARE(tree.findActiveViewport({50, 750})->getCoordinates(), // 3
@@ -127,7 +127,7 @@ void ViewportTreeTest::Partition()
     // |     1     |     2     |
     // |           |           |
     // +-----------------------+
-    tree.divide({100, 100}, ViewportNode::PartitionDirection::VERTICAL);
+    tree.divide({100, 100}, PartitionDirection::VERTICAL);
     CORRADE_COMPARE(tree.findActiveViewport({50, 50})->getCoordinates(), // 1
                     Range2Di({}, {windowSize.x() / 2, windowSize.y()}));
     CORRADE_COMPARE(tree.findActiveViewport({750, 50})->getCoordinates(), // 2
@@ -138,7 +138,7 @@ void ViewportTreeTest::Partition()
     // |-----------|     2     |
     // |     1     |           |
     // +-----------------------+
-    tree.divide({}, ViewportNode::PartitionDirection::HORIZONTAL);
+    tree.divide({}, PartitionDirection::HORIZONTAL);
     CORRADE_COMPARE(tree.findActiveViewport(windowSize / 4)->getCoordinates(), // 3
                     Range2Di({}, windowSize / 2));
     CORRADE_COMPARE(tree.findActiveViewport({windowSize.x() / 4, 3 * windowSize.y() / 4})->getCoordinates(), // 1
@@ -151,7 +151,7 @@ void ViewportTreeTest::Partition()
     // |-----------|     2     |
     // |  1  |  4  |           |
     // +-----------------------+
-    tree.divide({windowSize.x() / 4, 3 * windowSize.y() / 4}, ViewportNode::PartitionDirection::VERTICAL);
+    tree.divide({windowSize.x() / 4, 3 * windowSize.y() / 4}, PartitionDirection::VERTICAL);
     CORRADE_COMPARE(tree.findActiveViewport(windowSize / 4)->getCoordinates(), // 3
                     Range2Di({}, windowSize / 2));
     CORRADE_COMPARE(tree.findActiveViewport({windowSize.x() / 8, 3 * windowSize.y() / 4})->getCoordinates(), // 1
@@ -166,7 +166,7 @@ void ViewportTreeTest::Partition()
     // |-----------|  2  |  5  |
     // |  1  |  4  |     |     |
     // +-----------------------+
-    tree.divide({3 * windowSize.x() / 4, windowSize.y() / 2}, ViewportNode::PartitionDirection::VERTICAL);
+    tree.divide({3 * windowSize.x() / 4, windowSize.y() / 2}, PartitionDirection::VERTICAL);
     CORRADE_COMPARE(tree.findActiveViewport(windowSize / 4)->getCoordinates(), // 3
                     Range2Di({}, windowSize / 2));
     CORRADE_COMPARE(tree.findActiveViewport({windowSize.x() / 8, 3 * windowSize.y() / 4})->getCoordinates(), // 1
@@ -244,7 +244,7 @@ void ViewportTreeTest::PaneAdjustment()
     // |     1     |     2     |
     // |           |           |
     // +-----------------------+
-    tree.divide({100, 100}, ViewportNode::PartitionDirection::VERTICAL);
+    tree.divide({100, 100}, PartitionDirection::VERTICAL);
     CORRADE_COMPARE(tree.findActiveViewport({50, 50})->getCoordinates(), // 1
                     Range2Di({}, {windowSize.x() / 2, windowSize.y()}));
     CORRADE_COMPARE(tree.findActiveViewport({750, 50})->getCoordinates(), // 2
@@ -277,7 +277,7 @@ void ViewportTreeTest::PaneAdjustment()
     // |   1   |---------------|
     // |       |       3       |
     // +-----------------------+
-    tree.divide(windowSize / 2, ViewportNode::PartitionDirection::HORIZONTAL);
+    tree.divide(windowSize / 2, PartitionDirection::HORIZONTAL);
     CORRADE_COMPARE(tree.findActiveViewport({50, 50})->getCoordinates(), // 1
                     Range2Di({}, {windowSize.x() / 4, windowSize.y()}));
     CORRADE_COMPARE(tree.findActiveViewport({windowSize.x() / 2, windowSize.y() / 4})->getCoordinates(), // 2
@@ -327,7 +327,7 @@ void ViewportTreeTest::PaneAdjustment()
     // |     1     |-----------|
     // |           |     3     |
     // +-----------------------+
-    tree.divide({3 * windowSize.x() / 4, windowSize.y() / 2}, ViewportNode::PartitionDirection::HORIZONTAL);
+    tree.divide({3 * windowSize.x() / 4, windowSize.y() / 2}, PartitionDirection::HORIZONTAL);
     CORRADE_COMPARE(tree.findActiveViewport({50, 50})->getCoordinates(), // 1
                     Range2Di({}, {windowSize.x() / 2, windowSize.y()}));
     CORRADE_COMPARE(tree.findActiveViewport({3 * windowSize.x() / 4, windowSize.y() / 4})->getCoordinates(), // 2
