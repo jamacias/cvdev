@@ -263,7 +263,7 @@ public:
         return std::next(ConstIterator(rightMost(static_cast<const Derived*>(this))));
     }
 
-protected:
+// protected:
     std::unique_ptr<Derived> left_{nullptr};
     std::unique_ptr<Derived> right_{nullptr};
     Derived*                 parent_{nullptr};
@@ -277,7 +277,7 @@ private:
         T* n = current;
         while (n->left_ != nullptr)
         {
-            n = n->left_.get();
+            n = static_cast<Derived*>(n->left_.get());
         }
 
         CORRADE_INTERNAL_ASSERT(n->isLeaf());
@@ -309,14 +309,14 @@ private:
         CORRADE_INTERNAL_ASSERT(current != nullptr);
         if (current->right_ != nullptr)
         {
-            return leftMost(current->right_.get());
+            return leftMost(static_cast<Derived*>(current->right_.get()));
         }
 
-        Derived* n = current->parent_;
+        Derived* n = static_cast<Derived*>(current->parent_);
         while (n != nullptr && current == n->right_.get())
         {
             current = n;
-            n       = n->parent_;
+            n       = static_cast<Derived*>(n->parent_);
         }
 
         return n;

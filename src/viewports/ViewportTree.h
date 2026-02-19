@@ -50,9 +50,18 @@ public:
 
     void adjustPane(const Int distance);
 
+    bool atEdge(Vector2& position) const
+    {
+        const auto min =
+            std::min({Math::abs(coordinates_.left() - position.x()), Math::abs(coordinates_.top() - position.y()),
+                      Math::abs(coordinates_.right() - position.x()), Math::abs(coordinates_.bottom() - position.y())});
+
+        return min < 5.f;
+    }
+
     constexpr bool isVisible() const { return isLeaf(); }
 
-private:
+// private:
     friend ViewportTree<ViewportNode>;
     friend BinaryTree<ViewportNode>;
     friend Node<ViewportNode>;
@@ -125,7 +134,7 @@ public:
                             { return viewport.getCoordinates().contains(coordinates) && viewport.isVisible(); });
     }
 
-    void divide(const Vector2i& coordinates, const PartitionDirection& direction)
+    std::pair<const ViewportType*, const ViewportType*> divide(const Vector2i& coordinates, const PartitionDirection& direction)
     {
         auto parent = findActiveViewport(coordinates);
 
@@ -159,9 +168,11 @@ public:
             parent->left_->distribution_  = {{0.0, 0.0}, {0.5, 1.0}};
             parent->right_->distribution_ = {{0.5, 0.0}, {1.0, 1.0}};
         }
+
+        return {parent->left_.get(), parent->right_.get()};
     }
 
-    void collapse([[maybe_unused]] const Vector2i& coordinates)
+    ViewportType* collapse(const Vector2i& coordinates)
     {
         auto viewportToBeCollapsed = findActiveViewport(coordinates);
         CORRADE_INTERNAL_ASSERT(!viewportToBeCollapsed->isRoot());
@@ -171,10 +182,10 @@ public:
         Idea: reconnect the nodes and and go through the whole tree recalculating the coordinates (distribute)
         */
 
-        const auto viewportToBeKept = viewportToBeCollapsed->sibling();
+        const auto viewportToBeKept = static_cast<ViewportType*>(viewportToBeCollapsed->sibling());
         auto newParent = viewportToBeCollapsed->parent_->isRoot()
                              ? typename BinaryTree<ViewportType>::Iterator(nullptr)
-                             : typename BinaryTree<ViewportType>::Iterator(viewportToBeCollapsed->parent_->parent_);
+                             : typename BinaryTree<ViewportType>::Iterator(static_cast<ViewportType*>(viewportToBeCollapsed->parent_->parent_));
         if (newParent.get())
         {
             const auto newSiblingDistribution = viewportToBeCollapsed->parent_->sibling()->distribution_;
@@ -190,11 +201,13 @@ public:
         // and linked to its grandfather.
         auto extractedViewport =
             BinaryTree<ViewportType>::cut(typename BinaryTree<ViewportType>::Iterator(viewportToBeKept));
+        ViewportType* returnValue = extractedViewport.get();
+        
         // TODO: we have to keep the unique ptrs because otherwise we get a segfault during insertion
         //       if compiled with optimizations. Maybe this can be improved when BinaryTree supports
         //       swapping nodes :/
         const auto nodeToBeReplaced =
-            BinaryTree<ViewportType>::cut(typename BinaryTree<ViewportType>::Iterator(viewportToBeCollapsed->parent_));
+            BinaryTree<ViewportType>::cut(typename BinaryTree<ViewportType>::Iterator(static_cast<ViewportType*>(viewportToBeCollapsed->parent_)));
         const auto collapsedViewport = BinaryTree<ViewportType>::cut(viewportToBeCollapsed);
         BinaryTree<ViewportType>::insert(newParent, std::move(extractedViewport));
 
@@ -209,13 +222,15 @@ public:
             node->distribute();
             queue.pop();
             if (node->left_)
-                queue.push(node->left_.get());
+                queue.push(static_cast<ViewportType*>(node->left_.get()));
             if (node->right_)
-                queue.push(node->right_.get());
+                queue.push(static_cast<ViewportType*>(node->right_.get()));
         }
 
         // CORRADE_INTERNAL_ASSERT(Math::join(newParent->left_->distribution_, newParent->right_->distribution_) == Range2D(Vector2{0.0f}, Vector2{1.0f}));
         // CORRADE_INTERNAL_ASSERT(Math::join(newParent->left_->getCoordinates(), newParent->right_->getCoordinates()) == newParent->getCoordinates());
+
+        return returnValue;
     }
 
     void adjust(const Vector2i& position, const Int distance)

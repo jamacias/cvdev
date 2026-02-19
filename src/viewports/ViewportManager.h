@@ -1,7 +1,7 @@
 #ifndef VIEWPORTS_VIEWPORTMANAGER_H
 #define VIEWPORTS_VIEWPORTMANAGER_H
 
-#include "../containers/BinaryTree.h"
+// #include "../viewports/ViewportTree.h"
 #include "../panels/3DView.h"
 
 #include <Magnum/GL/Mesh.h>
@@ -35,6 +35,7 @@ private:
     std::vector<ThreeDView>            viewports_;
     std::optional<ThreeDView::EBorder> activatedBorder_{std::nullopt};
     ThreeDView*                        borderInteractionViewport_{nullptr};
+    // ViewportTree tree;
 };
 
 #endif // VIEWPORTS_VIEWPORTMANAGER_H

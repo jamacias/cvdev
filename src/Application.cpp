@@ -1,4 +1,9 @@
 #include "Application.h"
+#include "Corrade/Utility/Debug.h"
+#include "Magnum/Magnum.h"
+#include "viewports/3DViewport.h"
+#include "viewports/ViewportTree.h"
+#include "viewports/VisibleViewport.h"
 
 #include <Magnum/GL/PixelFormat.h>
 #include <Magnum/GL/Renderer.h>
@@ -6,6 +11,8 @@
 #include <Magnum/Math/FunctionsBatch.h>
 #include <Magnum/MeshTools/Compile.h>
 #include <Magnum/Trade/MeshData.h>
+#include <memory>
+#include <set>
 
 using namespace Magnum;
 
@@ -41,18 +48,21 @@ CVDev::CVDev(const Arguments& arguments)
     threeDView1_ = std::make_unique<ThreeDView>(*this, scene_);
     grid_        = std::make_unique<Grid>(*scene_, drawables_);
 
-    imagePreview_ = std::make_unique<ImagePreview>();
+    tree_ = std::make_unique<ViewportTree<ViewportNode>>(windowSize());
+    viewports_[tree_->begin().get()] = std::make_unique<ThreeDViewport>(*this, tree_->begin().get(), scene_);
 
-    viewportManager_ = std::make_unique<ViewportManager>(*this, scene_);
-    viewportManager_->createNewViewport({1, 1}, ThreeDView::EBorder::LEFT);
+    // imagePreview_ = std::make_unique<ImagePreview>();
 
-    viewportManager_->createNewViewport({1, 1}, ThreeDView::EBorder::BOTTOM);
+    // viewportManager_ = std::make_unique<ViewportManager>(*this, scene_);
+    // viewportManager_->createNewViewport({1, 1}, ThreeDView::EBorder::LEFT);
 
-    viewportManager_->createNewViewport({1, 1}, ThreeDView::EBorder::BOTTOM);
+    // viewportManager_->createNewViewport({1, 1}, ThreeDView::EBorder::BOTTOM);
 
-    viewportManager_->createNewViewport({1, 600}, ThreeDView::EBorder::TOP);
+    // viewportManager_->createNewViewport({1, 1}, ThreeDView::EBorder::BOTTOM);
 
-    viewportManager_->createNewViewport({1, 600}, ThreeDView::EBorder::RIGHT);
+    // viewportManager_->createNewViewport({1, 600}, ThreeDView::EBorder::TOP);
+
+    // viewportManager_->createNewViewport({1, 600}, ThreeDView::EBorder::RIGHT);
 
     // viewportManager_->createNewViewport({1200, 1});
 }
@@ -82,7 +92,11 @@ void CVDev::drawEvent()
     // threeDView_->setViewport(Range2Di({windowSize().x()/2, 0}, {windowSize()}));
     // threeDView_->draw(drawables_);
 
-    viewportManager_->draw(drawables_);
+    // viewportManager_->draw(drawables_);
+    for (auto& [ptr, viewport] : viewports_)
+    {
+        viewport->draw(drawables_);
+    }
 
     // imagePreview_->draw();
 
@@ -109,12 +123,50 @@ void CVDev::viewportEvent(ViewportEvent& event)
     GL::defaultFramebuffer.setViewport({{}, event.framebufferSize()});
 
     imgui_.relayout(Vector2{event.windowSize()} / event.dpiScaling(), event.windowSize(), event.framebufferSize());
+
+    // for (ThreeDViewport& viewport : *viewports_)
+    // {
+    //     viewport.setWindowSize(event.windowSize());
+    // }
 }
 
 void CVDev::keyPressEvent(KeyEvent& event)
 {
     if (imgui_.handleKeyPressEvent(event))
         return;
+
+    if (event.key() == Key::E)
+    {
+        Utility::Debug{} << "Divide horizontally";
+        ViewportNode* activeNode = tree_->findActiveViewport(Vector2i{lastMousePosition_}).get();
+        viewports_.erase(activeNode);
+        const auto divisionNodes = tree_->divide(Vector2i{lastMousePosition_}, PartitionDirection::HORIZONTAL);
+        viewports_[divisionNodes.first] = std::make_unique<ThreeDViewport>(*this, divisionNodes.first, scene_);
+        viewports_[divisionNodes.second] = std::make_unique<ThreeDViewport>(*this, divisionNodes.second, scene_);
+    }
+    else if (event.key() == Key::O)
+    {
+        Utility::Debug{} << "Divide vertically";
+        ViewportNode* activeNode = tree_->findActiveViewport(Vector2i{lastMousePosition_}).get();
+        viewports_.erase(activeNode);
+        const auto divisionNodes = tree_->divide(Vector2i{lastMousePosition_}, PartitionDirection::VERTICAL);
+        viewports_[divisionNodes.first] = std::make_unique<ThreeDViewport>(*this, divisionNodes.first, scene_);
+        viewports_[divisionNodes.second] = std::make_unique<ThreeDViewport>(*this, divisionNodes.second, scene_);
+    }
+    // else if (event.key() == Key::LeftCtrl && event.key() == Key::LeftShift && event.key() == Key::X)
+    // {
+
+    //     tree_->collapse(Vector2i{lastMousePosition_});
+    // }
+
+    // for (auto& node : *tree_)
+    // {
+    //     Utility::Debug{} << node.getCoordinates();
+    //     if (node.isVisible())
+    //         return;
+    //     Utility::Debug{} << "Erase " << node;
+    //     viewports_.erase(&node);
+    // }
 }
 
 void CVDev::keyReleaseEvent(KeyEvent& event)
@@ -125,36 +177,70 @@ void CVDev::keyReleaseEvent(KeyEvent& event)
 
 void CVDev::pointerPressEvent(PointerEvent& event)
 {
+    registerMousePosition(event.position());
+
     if (imgui_.handlePointerPressEvent(event))
         return;
 
-    viewportManager_->handlePointerPressEvent(event);
+    const auto activeViewport = tree_->findActiveViewport(Vector2i{lastMousePosition_});
+    viewports_.at(activeViewport.get())->interacting = activeViewport->atEdge(lastMousePosition_);
+    viewports_.at(activeViewport->sibling())->interacting = viewports_.at(activeViewport.get())->interacting;
+
+    for (auto& [ptr, viewport] : viewports_)
+    {
+        viewport->handlePointerPressEvent(event);
+    }
+    
+    // viewportManager_->handlePointerPressEvent(event);
     // threeDView1_->handlePointerPressEvent(event);
     // threeDView_->handlePointerPressEvent(event);
 }
 
 void CVDev::pointerReleaseEvent(PointerEvent& event)
 {
+    registerMousePosition(event.position());
+
     if (imgui_.handlePointerReleaseEvent(event))
         return;
 
-    viewportManager_->handlePointerReleaseEvent(event);
+    for (auto& [ptr, viewport] : viewports_)
+    {
+        viewport->handlePointerReleaseEvent(event);
+        viewport->interacting = false;
+    }
+    // viewportManager_->handlePointerReleaseEvent(event);
     // threeDView_->handlePointerReleaseEvent(event);
     // threeDView1_->handlePointerReleaseEvent(event);
 }
 
 void CVDev::pointerMoveEvent(PointerMoveEvent& event)
 {
+    registerMousePosition(event.position());
+
+    const auto activeViewport = tree_->findActiveViewport(Vector2i{lastMousePosition_});
+    if (viewports_.at(activeViewport.get())->interacting)
+    {
+        tree_->adjust(Vector2i{lastMousePosition_}, event.relativePosition().x());
+        return;
+    }
+
     if (imgui_.handlePointerMoveEvent(event))
         return;
 
-    viewportManager_->handlePointerMoveEvent(event);
+    for (auto& [ptr, viewport] : viewports_)
+    {
+        viewport->handlePointerMoveEvent(event);
+    }
+    
+    // viewportManager_->handlePointerMoveEvent(event);
     // threeDView1_->handlePointerMoveEvent(event);
     // threeDView_->handlePointerMoveEvent(event);
 }
 
 void CVDev::scrollEvent(ScrollEvent& event)
 {
+    registerMousePosition(event.position());
+
     if (imgui_.handleScrollEvent(event))
     {
         /* Prevent scrolling the page */
@@ -162,7 +248,12 @@ void CVDev::scrollEvent(ScrollEvent& event)
         return;
     }
 
-    viewportManager_->handleScrollEvent(event);
+    for (auto& [ptr, viewport] : viewports_)
+    {
+        viewport->handleScrollEvent(event);
+    }
+
+    // viewportManager_->handleScrollEvent(event);
     // threeDView1_->handleScrollEvent(event);
     // threeDView_->handleScrollEvent(event);
 }
@@ -171,6 +262,12 @@ void CVDev::textInputEvent(TextInputEvent& event)
 {
     if (imgui_.handleTextInputEvent(event))
         return;
+}
+
+void CVDev::registerMousePosition(const Vector2& position)
+{
+    // lastMousePosition_ = Vector2(position.x(), windowSize().y() - position.y());
+    lastMousePosition_ = position;
 }
 
 MAGNUM_APPLICATION_MAIN(CVDev)

@@ -16,8 +16,10 @@ set(PANELS_LIST
     panels/ImagePreview.cpp)
 
 set(VIEWPORTS_LIST
+    viewports/3DViewport.cpp
     viewports/AbstractViewport.cpp
-    viewports/ViewportManager.cpp)
+    viewports/ViewportManager.cpp
+    viewports/ViewportTree.cpp)
 
 
 add_subdirectory(test)
