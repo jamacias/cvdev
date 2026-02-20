@@ -4,6 +4,7 @@
 #include "panels/ImagePreview.h"
 #include "traits/traits.h"
 #include "viewports/ViewportManager.h"
+#include "viewports/3DViewport.h"
 
 #include <Magnum/GL/DefaultFramebuffer.h>
 #include <Magnum/ImGuiIntegration/Context.hpp>
@@ -43,4 +44,5 @@ private:
     std::unique_ptr<ThreeDView>      threeDView_;
     std::unique_ptr<ThreeDView>      threeDView1_;
     std::unique_ptr<ViewportManager> viewportManager_;
+    std::unique_ptr<ThreeDViewport> viewport_;
 };
