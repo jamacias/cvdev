@@ -1,4 +1,6 @@
 #include "Application.h"
+
+#include "Magnum/Magnum.h"
 #include "viewports/3DViewport.h"
 
 #include <Magnum/GL/PixelFormat.h>
@@ -27,7 +29,7 @@ CVDev::CVDev(const Arguments& arguments)
     }
 
     using namespace Math::Literals;
-    imgui_ = ImGuiIntegration::Context(Vector2{windowSize()} / dpiScaling(), windowSize(), framebufferSize());
+    imgui_      = ImGuiIntegration::Context(Vector2{windowSize()} / dpiScaling(), windowSize(), framebufferSize());
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     io.ConfigWindowsMoveFromTitleBarOnly = true;
@@ -42,8 +44,8 @@ CVDev::CVDev(const Arguments& arguments)
     GL::Renderer::setBlendFunction(GL::Renderer::BlendFunction::SourceAlpha,
                                    GL::Renderer::BlendFunction::OneMinusSourceAlpha);
 
-    grid_ = std::make_unique<Grid>(*scene_, drawables_);
-    viewport_ = std::make_unique<ThreeDViewport>(windowSize(), scene_);
+    grid_     = std::make_unique<Grid>(*scene_, drawables_);
+    viewport_ = std::make_unique<ThreeDViewport>(Range2Di{{}, windowSize()}, scene_);
 }
 
 void CVDev::drawEvent()
@@ -57,11 +59,11 @@ void CVDev::drawEvent()
     else if (!ImGui::GetIO().WantTextInput && isTextInputActive())
         stopTextInput();
 
-    const ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode | 
-                                               ImGuiDockNodeFlags_AutoHideTabBar;
+    const ImGuiDockNodeFlags dockspace_flags =
+        ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_AutoHideTabBar;
     ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), dockspace_flags);
 
-    const ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize;
+    const ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoCollapse;
     ImGui::Begin("Test", nullptr, window_flags);
     ImGui::Text("Hello, world!");
     const ImGuiIO& io = ImGui::GetIO();
@@ -110,24 +112,32 @@ void CVDev::keyReleaseEvent(KeyEvent& event)
 
 void CVDev::pointerPressEvent(PointerEvent& event)
 {
+    viewport_->handlePointerPressEvent(event);
+
     if (imgui_.handlePointerPressEvent(event))
         return;
 }
 
 void CVDev::pointerReleaseEvent(PointerEvent& event)
 {
+    viewport_->handlePointerReleaseEvent(event);
+
     if (imgui_.handlePointerReleaseEvent(event))
         return;
 }
 
 void CVDev::pointerMoveEvent(PointerMoveEvent& event)
 {
+    viewport_->handlePointerMoveEvent(event);
+
     if (imgui_.handlePointerMoveEvent(event))
         return;
 }
 
 void CVDev::scrollEvent(ScrollEvent& event)
 {
+    viewport_->handleScrollEvent(event);
+
     if (imgui_.handleScrollEvent(event))
     {
         /* Prevent scrolling the page */

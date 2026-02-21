@@ -18,7 +18,8 @@ using namespace Magnum;
 class ThreeDViewport
 {
 public:
-    explicit ThreeDViewport(const Vector2i& size, const std::shared_ptr<Scene3D> scene = std::make_shared<Scene3D>());
+    explicit ThreeDViewport(const Range2Di&                viewportArea,
+                            const std::shared_ptr<Scene3D> scene = std::make_shared<Scene3D>());
     virtual ~ThreeDViewport()                        = default;
     ThreeDViewport(const ThreeDViewport&)            = delete;
     ThreeDViewport(ThreeDViewport&&)                 = delete;
@@ -36,7 +37,7 @@ private:
     Vector2 lastPosition_{Constants::nan()};
     Vector3 rotationPoint_, translationPoint_;
 
-    Vector2i                 size_;
+    Range2Di                 viewportArea_;
     std::shared_ptr<Scene3D> scene_;
     std::unique_ptr<Camera>  camera_;
 
@@ -48,7 +49,7 @@ private:
     GL::Mesh          mesh_;
     Shaders::FlatGL2D shader_;
 
-    [[nodiscard]] Float   depthAt(const Vector2& windowPosition) const;
+    [[nodiscard]] Float   depthAt(const Vector2& windowPosition);
     [[nodiscard]] Vector3 unproject(const Vector2& windowPosition, Float depth) const;
 };
 
