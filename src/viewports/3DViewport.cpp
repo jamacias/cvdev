@@ -76,11 +76,13 @@ void ThreeDViewport::handlePointerPressEvent(Platform::Application::PointerEvent
 {
     using Pointer = Platform::Application::Pointer;
 
-    if (!viewportArea_.contains(Vector2i{event.position()}))
+    if (!isHovered_)
         return;
 
     if (!event.isPrimary() || !(event.pointer() & (Pointer::MouseLeft)))
         return;
+
+    isActive_ = true;
 
     /* Update the move position on press as well so touch movement (that emits
        no hover pointerMoveEvent()) works without jumps */
@@ -98,13 +100,19 @@ void ThreeDViewport::handlePointerPressEvent(Platform::Application::PointerEvent
     }
 }
 
-void ThreeDViewport::handlePointerReleaseEvent([[maybe_unused]] Platform::Application::PointerEvent& event) {}
+void ThreeDViewport::handlePointerReleaseEvent([[maybe_unused]] Platform::Application::PointerEvent& event)
+{
+    isActive_ = false;
+}
 
 void ThreeDViewport::handlePointerMoveEvent(Platform::Application::PointerMoveEvent& event)
 {
     using Pointer  = Platform::Application::Pointer;
     using Modifier = Platform::Application::Modifier;
     using namespace Math::Literals;
+
+    if (!isActive_)
+        return;
 
     if (!event.isPrimary() || !(event.pointers() & (Pointer::MouseLeft)))
         return;
@@ -132,7 +140,8 @@ void ThreeDViewport::handlePointerMoveEvent(Platform::Application::PointerMoveEv
 
 void ThreeDViewport::handleScrollEvent(Platform::Application::ScrollEvent& event)
 {
-    if (!viewportArea_.contains(Vector2i{event.position()}))
+    // if (!viewportArea_.contains(Vector2i{event.position()}))
+    if (!isHovered_)
         return;
 
     const Float   currentDepth = depthAt(event.position());
@@ -170,9 +179,10 @@ void ThreeDViewport::draw(SceneGraph::DrawableGroup3D& drawables)
 
     ImGui::Begin("3D Viewport", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
     ImGuiIntegration::image(colorTexture_, Vector2{viewportArea_.size()});
-    const auto& windowPos  = ImGui::GetWindowPos();
-    const auto& windowSize = ImGui::GetWindowSize();
+    const auto& windowPos  = ImGui::GetWindowViewport()->WorkPos;
+    const auto& windowSize = ImGui::GetWindowViewport()->WorkSize;
     viewportArea_          = {{static_cast<Int>(windowPos.x), static_cast<Int>(windowPos.y)},
                               {static_cast<Int>(windowSize.x), static_cast<Int>(windowSize.y)}};
+    isHovered_             = ImGui::IsItemHovered();
     ImGui::End();
 }

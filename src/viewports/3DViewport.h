@@ -38,6 +38,8 @@ private:
     Vector3 rotationPoint_, translationPoint_;
 
     Range2Di                 viewportArea_;
+    bool                     isHovered_{false};
+    bool                     isActive_{false};
     std::shared_ptr<Scene3D> scene_;
     std::unique_ptr<Camera>  camera_;
 
