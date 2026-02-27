@@ -9,6 +9,8 @@
 #include <Magnum/Math/FunctionsBatch.h>
 #include <Magnum/MeshTools/Compile.h>
 #include <Magnum/Trade/MeshData.h>
+#include <imgui.h>
+#include <imgui_internal.h>
 #include <memory>
 
 using namespace Magnum;
@@ -73,6 +75,8 @@ void CVDev::drawEvent()
 
     viewport_->draw(drawables_);
 
+    ImGui::ShowMetricsWindow();
+
     imgui_.updateApplicationCursor(*this);
 
     GL::Renderer::enable(GL::Renderer::Feature::Blending);
@@ -96,6 +100,8 @@ void CVDev::viewportEvent(ViewportEvent& event)
     GL::defaultFramebuffer.setViewport({{}, event.framebufferSize()});
 
     imgui_.relayout(Vector2{event.windowSize()} / event.dpiScaling(), event.windowSize(), event.framebufferSize());
+
+    viewport_->resize(event.windowSize(), event.framebufferSize());
 }
 
 void CVDev::keyPressEvent(KeyEvent& event)

@@ -30,7 +30,17 @@ ThreeDViewport::ThreeDViewport(const Range2Di& viewportArea, const std::shared_p
 
     lastDepth_ = ((camera_->projectionMatrix() * camera_->cameraMatrix()).transformPoint({}).z() + 1.0f) * 0.5f;
 
-    framebuffer_  = GL::Framebuffer{viewportArea_};
+    resize(viewportArea_.size(), viewportArea_.size());
+
+    // Setup the borders of the viewport
+    mesh_ = MeshTools::compile(Primitives::squareWireframe());
+}
+
+void ThreeDViewport::resize(const Vector2i& windowSize, const Vector2i& framebufferSize)
+{
+    viewportArea_ = {{}, windowSize};
+
+    framebuffer_  = GL::Framebuffer{{{}, framebufferSize}};
     colorTexture_ = GL::Texture2D{};
     colorTexture_.setStorage(1, GL::TextureFormat::RGBA8, viewportArea_.size());
     depthBuffer_ = GL::Renderbuffer{};
@@ -38,9 +48,6 @@ ThreeDViewport::ThreeDViewport(const Range2Di& viewportArea, const std::shared_p
     framebuffer_.attachTexture(GL::Framebuffer::ColorAttachment{0}, colorTexture_, 0)
         .attachRenderbuffer(GL::Framebuffer::BufferAttachment::Depth, depthBuffer_)
         .mapForDraw({{0, GL::Framebuffer::ColorAttachment{0}}});
-
-    // Setup the borders of the viewport
-    mesh_ = MeshTools::compile(Primitives::squareWireframe());
 }
 
 Float ThreeDViewport::depthAt(const Vector2& windowPosition)

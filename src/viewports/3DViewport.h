@@ -26,6 +26,8 @@ public:
     ThreeDViewport& operator=(const ThreeDViewport&) = delete;
     ThreeDViewport& operator=(ThreeDViewport&&)      = delete;
 
+    void resize(const Vector2i& windowSize, const Vector2i& framebufferSize);
+
     void handlePointerPressEvent(Platform::Application::PointerEvent& event);
     void handlePointerReleaseEvent(Platform::Application::PointerEvent& event);
     void handlePointerMoveEvent(Platform::Application::PointerMoveEvent& event);
