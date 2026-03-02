@@ -7,12 +7,9 @@
 
 Grid::Grid(Object3D& parent, SceneGraph::DrawableGroup3D& drawables)
 : SceneGraph::Drawable3D(parent, &drawables)
+, origin_(parent, drawables)
 {
-    using namespace Math::Literals;
-
-    grid_ = MeshTools::compile(Primitives::grid3DWireframe({15, 15}));
-
-    rotateX(90.0_degf).scale(Vector3{8.0f});
+    grid_ = MeshTools::compile(Primitives::grid3DWireframe({sizeMeters_ - 1, sizeMeters_ - 1}));
 }
 
 void Grid::draw(const Matrix4& transformation, SceneGraph::Camera3D& camera)
@@ -20,6 +17,6 @@ void Grid::draw(const Matrix4& transformation, SceneGraph::Camera3D& camera)
     using namespace Math::Literals;
 
     shader_.setColor(0x747474_rgbf)
-        .setTransformationProjectionMatrix(camera.projectionMatrix() * transformation)
+        .setTransformationProjectionMatrix(camera.projectionMatrix() * transformation * Matrix4::scaling(Vector3{sizeMeters_ / 2.0f}))
         .draw(grid_);
 }

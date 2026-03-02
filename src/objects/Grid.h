@@ -2,6 +2,7 @@
 #define OBJECTS_GRID_H
 
 #include "../traits/traits.h"
+#include "Axis.h"
 
 #include <Magnum/GL/Mesh.h>
 #include <Magnum/SceneGraph/Camera.h>
@@ -19,6 +20,9 @@ public:
 private:
     Shaders::FlatGL3D shader_;
     GL::Mesh          grid_;
+    Axis              origin_;
+
+    Int sizeMeters_{4};
 };
 
 #endif // OBJECTS_GRID_H

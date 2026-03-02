@@ -8,6 +8,7 @@ find_package(MagnumIntegration REQUIRED
 set_directory_properties(PROPERTIES CORRADE_USE_PEDANTIC_FLAGS ON)
 
 set(OBJECTS_LIST
+    objects/Axis.cpp
     objects/Camera.cpp
     objects/Grid.cpp)
 
