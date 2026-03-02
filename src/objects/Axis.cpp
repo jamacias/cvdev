@@ -5,8 +5,9 @@
 #include <Magnum/Primitives/Axis.h>
 #include <Magnum/Trade/MeshData.h>
 
-Axis::Axis(Object3D& parent, SceneGraph::DrawableGroup3D& drawables)
-: SceneGraph::Drawable3D(parent, &drawables)
+Axis::Axis(Object3D* parent, SceneGraph::DrawableGroup3D* drawables)
+: Object3D{parent}
+, SceneGraph::Drawable3D{*this, drawables}
 {
     using namespace Math::Literals;
 

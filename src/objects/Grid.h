@@ -14,7 +14,8 @@ using namespace Magnum;
 class Grid : public Object3D, public SceneGraph::Drawable3D
 {
 public:
-    explicit Grid(Object3D& parent, SceneGraph::DrawableGroup3D& drawables);
+    explicit Grid(Object3D* parent, SceneGraph::DrawableGroup3D* drawables);
+
     void draw(const Matrix4& transformation, SceneGraph::Camera3D& camera);
 
 private:

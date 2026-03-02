@@ -14,7 +14,8 @@ using namespace Magnum;
 class Axis : public Object3D, public SceneGraph::Drawable3D
 {
 public:
-    explicit Axis(Object3D& parent, SceneGraph::DrawableGroup3D& drawables);
+    explicit Axis(Object3D* parent, SceneGraph::DrawableGroup3D* drawables);
+
     void draw(const Matrix4& transformation, SceneGraph::Camera3D& camera);
 
 private:
