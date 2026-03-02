@@ -18,9 +18,12 @@
 #include <Magnum/Trade/MeshData.h>
 #include <imgui.h>
 
+#include <string>
+
 ThreeDViewport::ThreeDViewport(const Range2Di& viewportArea, const std::shared_ptr<Scene3D> scene)
 : viewportArea_(viewportArea)
 , scene_(scene)
+, id_(count)
 {
     using namespace Math::Literals;
     camera_ = std::make_unique<Camera>(*scene_);
@@ -34,6 +37,8 @@ ThreeDViewport::ThreeDViewport(const Range2Di& viewportArea, const std::shared_p
 
     // Setup the borders of the viewport
     mesh_ = MeshTools::compile(Primitives::squareWireframe());
+
+    ++count;
 }
 
 void ThreeDViewport::resize(const Vector2i& windowSize, const Vector2i& framebufferSize)
@@ -184,7 +189,7 @@ void ThreeDViewport::draw(SceneGraph::DrawableGroup3D& drawables)
 
     GL::defaultFramebuffer.bind();
 
-    ImGui::Begin("3D Viewport", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+    ImGui::Begin(("3D Viewport" + std::to_string(id_)).c_str(), nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
     ImGuiIntegration::image(colorTexture_, Vector2{viewportArea_.size()});
     const auto& windowPos  = ImGui::GetWindowViewport()->WorkPos;
     const auto& windowSize = ImGui::GetWindowViewport()->WorkSize;
@@ -193,3 +198,5 @@ void ThreeDViewport::draw(SceneGraph::DrawableGroup3D& drawables)
     isHovered_             = ImGui::IsItemHovered();
     ImGui::End();
 }
+
+UnsignedInt ThreeDViewport::count {0};

@@ -47,7 +47,8 @@ CVDev::CVDev(const Arguments& arguments)
                                    GL::Renderer::BlendFunction::OneMinusSourceAlpha);
 
     grid_     = std::make_unique<Grid>(*scene_, drawables_);
-    viewport_ = std::make_unique<ThreeDViewport>(Range2Di{{}, windowSize()}, scene_);
+    viewports_.emplace_back(std::make_unique<ThreeDViewport>(Range2Di{{}, windowSize()}, scene_));
+    viewports_.emplace_back(std::make_unique<ThreeDViewport>(Range2Di{{}, windowSize()}, scene_));
 }
 
 void CVDev::drawEvent()
@@ -73,7 +74,10 @@ void CVDev::drawEvent()
                 static_cast<double>(io.Framerate));
     ImGui::End();
 
-    viewport_->draw(drawables_);
+    for (const auto& viewport : viewports_)
+    {
+        viewport->draw(drawables_);
+    }
 
     ImGui::ShowMetricsWindow();
 
@@ -101,7 +105,10 @@ void CVDev::viewportEvent(ViewportEvent& event)
 
     imgui_.relayout(Vector2{event.windowSize()} / event.dpiScaling(), event.windowSize(), event.framebufferSize());
 
-    viewport_->resize(event.windowSize(), event.framebufferSize());
+    for (const auto& viewport : viewports_)
+    {
+        viewport->resize(event.windowSize(), event.framebufferSize());
+    }
 }
 
 void CVDev::keyPressEvent(KeyEvent& event)
@@ -118,7 +125,10 @@ void CVDev::keyReleaseEvent(KeyEvent& event)
 
 void CVDev::pointerPressEvent(PointerEvent& event)
 {
-    viewport_->handlePointerPressEvent(event);
+    for (const auto& viewport : viewports_)
+    {
+        viewport->handlePointerPressEvent(event);
+    }
 
     if (imgui_.handlePointerPressEvent(event))
         return;
@@ -126,7 +136,10 @@ void CVDev::pointerPressEvent(PointerEvent& event)
 
 void CVDev::pointerReleaseEvent(PointerEvent& event)
 {
-    viewport_->handlePointerReleaseEvent(event);
+    for (const auto& viewport : viewports_)
+    {
+        viewport->handlePointerReleaseEvent(event);
+    }
 
     if (imgui_.handlePointerReleaseEvent(event))
         return;
@@ -134,7 +147,10 @@ void CVDev::pointerReleaseEvent(PointerEvent& event)
 
 void CVDev::pointerMoveEvent(PointerMoveEvent& event)
 {
-    viewport_->handlePointerMoveEvent(event);
+    for (const auto& viewport : viewports_)
+    {
+        viewport->handlePointerMoveEvent(event);
+    }
 
     if (imgui_.handlePointerMoveEvent(event))
         return;
@@ -142,7 +158,10 @@ void CVDev::pointerMoveEvent(PointerMoveEvent& event)
 
 void CVDev::scrollEvent(ScrollEvent& event)
 {
-    viewport_->handleScrollEvent(event);
+    for (const auto& viewport : viewports_)
+    {
+        viewport->handleScrollEvent(event);
+    }
 
     if (imgui_.handleScrollEvent(event))
     {

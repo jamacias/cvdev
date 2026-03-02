@@ -55,6 +55,9 @@ private:
 
     [[nodiscard]] Float   depthAt(const Vector2& windowPosition);
     [[nodiscard]] Vector3 unproject(const Vector2& windowPosition, Float depth) const;
+
+    UnsignedInt id_{0}; ///< a unique number that identifies this instance
+    static UnsignedInt count;
 };
 
 #endif // VIEWPORTS_3DVIEWPORT_H

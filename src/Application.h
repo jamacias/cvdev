@@ -44,5 +44,5 @@ private:
     std::unique_ptr<ThreeDView>      threeDView_;
     std::unique_ptr<ThreeDView>      threeDView1_;
     std::unique_ptr<ViewportManager> viewportManager_;
-    std::unique_ptr<ThreeDViewport>  viewport_;
+    std::vector<std::unique_ptr<ThreeDViewport>>  viewports_;
 };
